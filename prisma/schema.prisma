@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  WOMEN
+  MEN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  RAZORPAY
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id        String         @id @default(cuid())
+  phone     String         @unique
+  name      String?
+  createdAt DateTime       @default(now())
+  addresses Address[]
+  cartItems CartItem[]
+  orders    Order[]
+  wishlist  WishlistItem[]
+}
+
+model OtpSession {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+model Product {
+  id             String           @id @default(cuid())
+  name           String
+  slug           String           @unique
+  description    String           @default("")
+  price          Int
+  compareAtPrice Int?
+  category       Category
+  images         String[]
+  isDemo         Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  variants       ProductVariant[]
+  wishlist       WishlistItem[]
+}
+
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       String
+  color      String
+  colorHex   String      @default("#000000")
+  sku        String      @unique
+  stock      Int         @default(10)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@unique([productId, size, color])
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity  Int            @default(1)
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, variantId])
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pinCode   String
+  isDefault Boolean @default(false)
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  orderNumber       String        @unique
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  status            OrderStatus   @default(PENDING_PAYMENT)
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(PENDING)
+  subtotal          Int
+  shippingFee       Int
+  total             Int
+  addressSnapshot   Json
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  items             OrderItem[]
+}
+
+model OrderItem {
+  id          String         @id @default(cuid())
+  orderId     String
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  productName String
+  size        String
+  color       String
+  price       Int
+  quantity    Int
+}
+
+model WishlistItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model SiteSettings {
+  id                    String @id @default("default")
+  freeShippingThreshold Int    @default(999)
+  baseShippingFee       Int    @default(79)
+}
+
+model Admin {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+}

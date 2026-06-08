@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: duzzle
+      POSTGRES_PASSWORD: duzzle
+      POSTGRES_DB: duzzle
+    ports:
+      - "5432:5432"
+    volumes:
+      - duzzle_pg:/var/lib/postgresql/data
+
+volumes:
+  duzzle_pg:
