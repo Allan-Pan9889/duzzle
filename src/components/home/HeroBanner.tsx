@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { isLocalDemoAsset } from "@/lib/utils";
 
 const slides = [
   {
@@ -30,6 +31,7 @@ export function HeroBanner() {
           src={slides[0].image}
           alt={slides[0].title}
           fill
+          unoptimized={isLocalDemoAsset(slides[0].image)}
           className="object-cover grayscale"
           priority
           sizes="100vw"

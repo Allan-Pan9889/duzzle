@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, isLocalDemoAsset } from "@/lib/utils";
 
 export type CartItemData = {
   id: string;
@@ -40,7 +40,14 @@ export function CartItem({
         href={`/product/${product.slug}`}
         className="relative h-28 w-24 shrink-0 overflow-hidden bg-surface"
       >
-        <Image src={image} alt={product.name} fill className="object-cover" sizes="96px" />
+        <Image
+          src={image}
+          alt={product.name}
+          fill
+          unoptimized={isLocalDemoAsset(image)}
+          className="object-cover"
+          sizes="96px"
+        />
       </Link>
 
       <div className="flex flex-1 flex-col justify-between">

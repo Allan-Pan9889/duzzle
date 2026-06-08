@@ -1,6 +1,7 @@
 import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
+import { clearNextImageCache } from "./clear-image-cache";
 import {
   HOME_DEMO_IMAGE_PATHS,
   HOME_DEMO_IMAGE_SOURCES,
@@ -61,7 +62,9 @@ function main(): void {
     }
   }
 
+  clearNextImageCache();
   console.log(`\nDone. ${ok}/${jobs.length} images saved to public/demo/home/`);
+  console.log("Cleared Next.js image cache — hard-refresh the browser (Cmd+Shift+R).");
 }
 
 main();

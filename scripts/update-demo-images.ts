@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
+import { clearNextImageCache } from "./clear-image-cache";
 import {
   DEMO_FASHION_IMAGE_CATALOG,
   MYNT_REFERER,
@@ -126,7 +127,9 @@ async function main(): Promise<void> {
     await sleep(RATE_LIMIT_MS);
   }
 
+  clearNextImageCache();
   console.log(`\nDone. Updated ${updated}, skipped ${skipped}.`);
+  console.log("Cleared Next.js image cache — hard-refresh the browser (Cmd+Shift+R).");
 }
 
 main()

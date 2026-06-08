@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { calcDiscount, formatPrice } from "@/lib/utils";
+import { calcDiscount, formatPrice, isLocalDemoAsset } from "@/lib/utils";
 import { WishlistButton } from "./WishlistButton";
 
 export type ProductCardData = {
@@ -24,6 +24,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           src={image}
           alt={product.name}
           fill
+          unoptimized={isLocalDemoAsset(image)}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           sizes="(max-width: 640px) 50vw, 25vw"
         />

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { isLocalDemoAsset } from "@/lib/utils";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
@@ -14,6 +15,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           src={gallery[active]}
           alt={name}
           fill
+          unoptimized={isLocalDemoAsset(gallery[active])}
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 50vw"
           priority
@@ -30,7 +32,14 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
                 i === active ? "border-primary" : "border-transparent"
               }`}
             >
-              <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+              <Image
+                src={img}
+                alt=""
+                fill
+                unoptimized={isLocalDemoAsset(img)}
+                className="object-cover"
+                sizes="64px"
+              />
             </button>
           ))}
         </div>

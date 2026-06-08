@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { isLocalDemoAsset } from "@/lib/utils";
 
 const categories = [
   {
@@ -31,6 +32,7 @@ export function CategoryGrid() {
               src={cat.image}
               alt={cat.label}
               fill
+              unoptimized={isLocalDemoAsset(cat.image)}
               className="object-cover transition-transform duration-500 group-hover:scale-105 grayscale"
               sizes="(max-width: 640px) 100vw, 50vw"
             />

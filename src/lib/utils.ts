@@ -1,3 +1,8 @@
+/** Local demo assets change often; skip Next image cache to avoid stale picsum thumbnails. */
+export function isLocalDemoAsset(src: string): boolean {
+  return src.startsWith("/demo/");
+}
+
 export function formatPrice(amount: number): string {
   return `₹${amount.toLocaleString("en-IN")}`;
 }
