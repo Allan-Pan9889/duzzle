@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
-import { isValidIndianPhone, normalizePhone } from "@/lib/otp";
+import { getDevOtpCode, isDevOtpEnabled, isValidIndianPhone, normalizePhone } from "@/lib/otp";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    if (!session) {
+    const devOtp = getDevOtpCode();
+    const devOtpBypass = isDevOtpEnabled() && devOtp === code;
+
+    if (!session && !devOtpBypass) {
       return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 400 });
     }
 
@@ -39,10 +42,12 @@ export async function POST(request: NextRequest) {
       create: { phone: normalized },
     });
 
-    await prisma.otpSession.update({
-      where: { id: session.id },
-      data: { verified: true },
-    });
+    if (session) {
+      await prisma.otpSession.update({
+        where: { id: session.id },
+        data: { verified: true },
+      });
+    }
 
     await createSession(user.id);
 

@@ -168,7 +168,18 @@ ADMIN_EMAIL="admin@duzzle.com"
 ADMIN_PASSWORD="生产环境强密码"
 
 NEXT_PUBLIC_APP_URL="https://shop.yourdomain.com"
+
+# Minibe OTP 短信（生产必填，测试可暂不填并改用 OTP_DEV_CODE）
+OTP_API_KEY="your-api-key"
+OTP_API_SECRET="your-api-secret"
+OTP_APP_ID="your-app-id"
+
+# 测试阶段固定 OTP（正式上线前删除）
+# OTP_DEV_CODE="123456"
+# NEXT_PUBLIC_OTP_DEV_CODE="123456"
 ```
+
+> `NEXT_PUBLIC_OTP_DEV_CODE` 需在 **`npm run build` 之前** 写入 `.env`，构建后登录页才会显示提示。修改后需重新 `npm run build` 并 `pm2 restart duzzle`。
 
 生成 JWT 密钥：
 
@@ -300,7 +311,7 @@ sudo certbot renew --dry-run
    `https://shop.yourdomain.com/api/payments/razorpay/verify`
 5. `pm2 restart duzzle`
 
-开发 OTP 为固定 `123456`；**生产需接入 MSG91**。
+生产环境配置 Minibe OTP（见 `.env` 中 `OTP_API_*`）；测试阶段可用 `OTP_DEV_CODE=123456` 跳过短信。
 
 ---
 

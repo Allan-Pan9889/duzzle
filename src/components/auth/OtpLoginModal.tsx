@@ -130,9 +130,9 @@ export function OtpLoginModal({
             <p className="text-sm text-muted">
               Enter the 6-digit code sent to +91{phone.slice(-10)}
             </p>
-            {process.env.NODE_ENV === "development" && (
+            {process.env.NEXT_PUBLIC_OTP_DEV_CODE && (
               <p className="rounded bg-surface px-3 py-2 text-xs text-muted">
-                Dev mode: use OTP <strong>123456</strong>
+                Dev OTP: use <strong>{process.env.NEXT_PUBLIC_OTP_DEV_CODE}</strong>
               </p>
             )}
             <Input

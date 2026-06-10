@@ -5,7 +5,7 @@ Premium men's and women's fashion e-commerce built with Next.js, Prisma, and Pos
 ## Features
 
 - Responsive storefront (Women / Men / New Arrivals)
-- Phone OTP login (MSG91 ready for production)
+- Phone OTP login (Minibe SMS in production)
 - Shopping cart & checkout
 - Cash on Delivery (COD) + Razorpay online payments
 - Order tracking & wishlist
@@ -74,6 +74,10 @@ Open [http://localhost:3000](http://localhost:3000)
 | `ADMIN_EMAIL` | Admin account email (seed) |
 | `ADMIN_PASSWORD` | Admin account password (seed) |
 | `NEXT_PUBLIC_APP_URL` | App URL for redirects |
+| `OTP_API_KEY` | Minibe OTP API key |
+| `OTP_API_SECRET` | Minibe OTP API secret |
+| `OTP_APP_ID` | Minibe application ID (`app_id`) |
+| `OTP_DEV_CODE` | Fixed OTP for staging (skip SMS) |
 
 ## Scripts
 

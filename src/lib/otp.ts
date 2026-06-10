@@ -1,7 +1,24 @@
-const DEV_OTP = "123456";
+import { isOtpProviderConfigured } from "@/lib/otp-provider";
+
+const DEFAULT_DEV_OTP = "123456";
+
+/** Fixed OTP when OTP_DEV_CODE is set, or local dev without SMS provider. */
+export function getDevOtpCode(): string | null {
+  const fromEnv = process.env.OTP_DEV_CODE?.trim();
+  if (fromEnv && /^\d{6}$/.test(fromEnv)) return fromEnv;
+  if (process.env.NODE_ENV === "development" && !isOtpProviderConfigured()) {
+    return DEFAULT_DEV_OTP;
+  }
+  return null;
+}
+
+export function isDevOtpEnabled(): boolean {
+  return getDevOtpCode() !== null;
+}
 
 export function generateOtp(): string {
-  if (process.env.NODE_ENV === "development") return DEV_OTP;
+  const devOtp = getDevOtpCode();
+  if (devOtp) return devOtp;
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
