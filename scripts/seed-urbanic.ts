@@ -3,6 +3,10 @@ import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, readFileSync, statSync } from "fs";
 import { dirname, join } from "path";
 import {
+  getDemoCatalog,
+  type DemoCatalogProduct,
+} from "./demo-product-catalog";
+import {
   imageUrlForProductName,
   imageUrlForSlug,
   MYNT_REFERER,
@@ -10,8 +14,8 @@ import {
 
 const prisma = new PrismaClient();
 
-const RATE_LIMIT_MS = 500;
-const MAX_PRODUCTS_PER_CATEGORY = 20;
+const RATE_LIMIT_MS = 400;
+const MAX_PRODUCTS_PER_CATEGORY = 40;
 const IMAGE_DIR = join(process.cwd(), "public", "demo", "products");
 
 const URBANIC_URLS: Record<Category, string> = {
@@ -260,160 +264,36 @@ async function scrapeUrbanicCategory(category: Category): Promise<ScrapedProduct
 }
 
 function getFallbackProducts(category: Category): ScrapedProduct[] {
-  const women: ScrapedProduct[] = [
-    {
-      name: "Floral Print A-Line Dress",
-      description: "Lightweight cotton blend dress with vibrant floral print.",
-      price: 899,
-      compareAtPrice: 1299,
-      imageUrls: [],
-    },
-    {
-      name: "High-Waist Wide Leg Trousers",
-      description: "Relaxed fit trousers with elastic waistband.",
-      price: 799,
-      compareAtPrice: 1099,
-      imageUrls: [],
-    },
-    {
-      name: "Ribbed Knit Crop Top",
-      description: "Soft ribbed fabric, perfect for layering.",
-      price: 499,
-      compareAtPrice: 699,
-      imageUrls: [],
-    },
-    {
-      name: "Pleated Midi Skirt",
-      description: "Flowy pleated skirt with side zip closure.",
-      price: 699,
-      compareAtPrice: 999,
-      imageUrls: [],
-    },
-    {
-      name: "Oversized Linen Shirt",
-      description: "Breathable linen blend, casual everyday wear.",
-      price: 649,
-      compareAtPrice: 899,
-      imageUrls: [],
-    },
-    {
-      name: "Wrap Front Blouse",
-      description: "Elegant wrap design with tie closure.",
-      price: 549,
-      compareAtPrice: 799,
-      imageUrls: [],
-    },
-    {
-      name: "High-Neck Bodycon Dress",
-      description: "Stretch fabric bodycon with high neckline.",
-      price: 849,
-      compareAtPrice: 1199,
-      imageUrls: [],
-    },
-    {
-      name: "Denim Jacket with Patch Pockets",
-      description: "Classic denim jacket with utility pockets.",
-      price: 1299,
-      compareAtPrice: 1799,
-      imageUrls: [],
-    },
-    {
-      name: "Tiered Maxi Skirt",
-      description: "Bohemian tiered skirt in flowing fabric.",
-      price: 749,
-      compareAtPrice: 1049,
-      imageUrls: [],
-    },
-    {
-      name: "Square Neck Cami Top",
-      description: "Minimal square neck cami with adjustable straps.",
-      price: 399,
-      compareAtPrice: 599,
-      imageUrls: [],
-    },
-  ];
+  return getDemoCatalog(category).map((product: DemoCatalogProduct) => ({
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    compareAtPrice: product.compareAtPrice,
+    imageUrls: [product.imageUrl],
+  }));
+}
 
-  const men: ScrapedProduct[] = [
-    {
-      name: "Slim Fit Cotton Shirt",
-      description: "Classic slim fit shirt in premium cotton.",
-      price: 699,
-      compareAtPrice: 999,
-      imageUrls: [],
-    },
-    {
-      name: "Tapered Chino Pants",
-      description: "Smart casual chinos with stretch comfort.",
-      price: 899,
-      compareAtPrice: 1299,
-      imageUrls: [],
-    },
-    {
-      name: "Graphic Print Oversized Tee",
-      description: "Relaxed fit tee with bold front graphic.",
-      price: 449,
-      compareAtPrice: 649,
-      imageUrls: [],
-    },
-    {
-      name: "Lightweight Bomber Jacket",
-      description: "Zip-front bomber with ribbed cuffs.",
-      price: 1499,
-      compareAtPrice: 1999,
-      imageUrls: [],
-    },
-    {
-      name: "Straight Leg Denim Jeans",
-      description: "Mid-rise straight leg jeans in dark wash.",
-      price: 999,
-      compareAtPrice: 1399,
-      imageUrls: [],
-    },
-    {
-      name: "Polo Collar Knit Polo",
-      description: "Soft knit polo with contrast collar.",
-      price: 599,
-      compareAtPrice: 849,
-      imageUrls: [],
-    },
-    {
-      name: "Cargo Jogger Pants",
-      description: "Utility cargo joggers with drawstring waist.",
-      price: 849,
-      compareAtPrice: 1149,
-      imageUrls: [],
-    },
-    {
-      name: "Henley Long Sleeve Tee",
-      description: "Casual henley with button placket.",
-      price: 499,
-      compareAtPrice: 699,
-      imageUrls: [],
-    },
-    {
-      name: "Quilted Puffer Vest",
-      description: "Lightweight insulated vest for layering.",
-      price: 1199,
-      compareAtPrice: 1599,
-      imageUrls: [],
-    },
-    {
-      name: "Relaxed Fit Linen Shorts",
-      description: "Breathable linen shorts for summer.",
-      price: 549,
-      compareAtPrice: 799,
-      imageUrls: [],
-    },
-  ];
+function mergeWithCatalog(
+  category: Category,
+  scraped: ScrapedProduct[],
+): ScrapedProduct[] {
+  const seen = new Set(scraped.map((p) => p.name.toLowerCase()));
+  const merged = [...scraped];
 
-  const catalog = category === "WOMEN" ? women : men;
-  return catalog.map((product) => {
-    const catalogUrl = imageUrlForProductName(product.name);
-    return {
-      ...product,
-      imageUrls: catalogUrl ? [catalogUrl] : product.imageUrls,
-    };
-  });
+  for (const item of getDemoCatalog(category)) {
+    if (merged.length >= MAX_PRODUCTS_PER_CATEGORY) break;
+    if (seen.has(item.name.toLowerCase())) continue;
+    seen.add(item.name.toLowerCase());
+    merged.push({
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      compareAtPrice: item.compareAtPrice,
+      imageUrls: [item.imageUrl],
+    });
+  }
+
+  return merged.slice(0, MAX_PRODUCTS_PER_CATEGORY);
 }
 
 function downloadImage(url: string, destPath: string): boolean {
@@ -435,6 +315,9 @@ function downloadImage(url: string, destPath: string): boolean {
     ];
     if (url.includes("myntassets.com")) {
       args.splice(-1, 0, "-H", `Referer: ${MYNT_REFERER}`);
+    }
+    if (url.includes("loremflickr.com")) {
+      args.splice(-1, 0, "-H", "Referer: https://loremflickr.com/");
     }
     execFileSync("curl", args, { stdio: "pipe" });
     return statSync(destPath).size > 1024;
@@ -527,6 +410,37 @@ async function seedProduct(
   console.log(`  ✓ ${product.name} (${uniqueSlug})`);
 }
 
+async function clearDemoProducts(): Promise<void> {
+  const demoProducts = await prisma.product.findMany({
+    where: { isDemo: true },
+    select: {
+      id: true,
+      variants: { select: { id: true } },
+    },
+  });
+
+  const variantIds = demoProducts.flatMap((p) => p.variants.map((v) => v.id));
+  const productIds = demoProducts.map((p) => p.id);
+
+  if (variantIds.length > 0) {
+    await prisma.orderItem.deleteMany({
+      where: { variantId: { in: variantIds } },
+    });
+    await prisma.cartItem.deleteMany({
+      where: { variantId: { in: variantIds } },
+    });
+  }
+
+  if (productIds.length > 0) {
+    await prisma.wishlistItem.deleteMany({
+      where: { productId: { in: productIds } },
+    });
+    await prisma.product.deleteMany({
+      where: { id: { in: productIds } },
+    });
+  }
+}
+
 async function main(): Promise<void> {
   loadEnv();
 
@@ -548,7 +462,7 @@ async function main(): Promise<void> {
   }
 
   console.log("Clearing existing demo products...");
-  await prisma.product.deleteMany({ where: { isDemo: true } });
+  await clearDemoProducts();
 
   const usedSlugs = new Set<string>();
   let usedFallback = false;
@@ -559,9 +473,12 @@ async function main(): Promise<void> {
     let products = await scrapeUrbanicCategory(category);
 
     if (products.length === 0) {
-      console.log(`  Using fallback demo catalog for ${category}`);
+      console.log(`  Using demo catalog for ${category} (${MAX_PRODUCTS_PER_CATEGORY} items)`);
       products = getFallbackProducts(category);
       usedFallback = true;
+    } else {
+      products = mergeWithCatalog(category, products);
+      console.log(`  Merged with demo catalog: ${products.length} products`);
     }
 
     products = products.slice(0, MAX_PRODUCTS_PER_CATEGORY);
