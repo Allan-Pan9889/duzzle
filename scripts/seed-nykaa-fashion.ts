@@ -71,6 +71,7 @@ async function cleanupOrphanDemoImagesFromDb(): Promise<number> {
   return removed;
 }
 
+function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
