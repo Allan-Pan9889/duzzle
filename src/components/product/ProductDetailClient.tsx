@@ -6,13 +6,11 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
 import { ProductGallery } from "./ProductGallery";
-import { SizeColorPicker } from "./SizeColorPicker";
+import { SizePicker } from "./SizePicker";
 
 type Variant = {
   id: string;
   size: string;
-  color: string;
-  colorHex: string;
   stock: number;
 };
 
@@ -95,7 +93,7 @@ export function ProductDetailClient({
           <p className="text-sm leading-relaxed text-muted">{description}</p>
         )}
 
-        <SizeColorPicker
+        <SizePicker
           variants={variants}
           selectedVariantId={selectedVariantId}
           onSelect={setSelectedVariantId}

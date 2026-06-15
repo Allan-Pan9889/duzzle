@@ -10,7 +10,6 @@ export type CartItemData = {
   variant: {
     id: string;
     size: string;
-    color: string;
     product: {
       name: string;
       slug: string;
@@ -58,9 +57,7 @@ export function CartItem({
           >
             {product.name}
           </Link>
-          <p className="mt-1 text-xs text-muted">
-            {item.variant.size} / {item.variant.color}
-          </p>
+          <p className="mt-1 text-xs text-muted">Size: {item.variant.size}</p>
           <p className="mt-2 text-sm text-primary">{formatPrice(product.price)}</p>
         </div>
 

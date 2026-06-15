@@ -18,16 +18,12 @@ const RATE_LIMIT_MS = 400;
 const MAX_PRODUCTS_PER_CATEGORY = 40;
 const IMAGE_DIR = join(process.cwd(), "public", "demo", "products");
 
-const URBANIC_URLS: Record<Category, string> = {
+const URBANIC_URLS: Partial<Record<Category, string>> = {
   WOMEN: "https://in.urbanic.com/women",
   MEN: "https://in.urbanic.com/men",
 };
 
 const SIZES = ["S", "M", "L", "XL"] as const;
-const COLORS = [
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
-] as const;
 
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -240,8 +236,8 @@ async function fetchPage(url: string): Promise<string | null> {
   }
 }
 
-async function scrapeUrbanicCategory(category: Category): Promise<ScrapedProduct[]> {
-  const url = URBANIC_URLS[category];
+async function scrapeUrbanicCategory(category: "WOMEN" | "MEN"): Promise<ScrapedProduct[]> {
+  const url = URBANIC_URLS[category]!;
   console.log(`Fetching ${url}...`);
   await sleep(RATE_LIMIT_MS);
 
@@ -359,18 +355,11 @@ async function resolveProductImages(
 }
 
 function buildVariants(slug: string) {
-  return SIZES.flatMap((size) =>
-    COLORS.map((color) => ({
-      size,
-      color: color.name,
-      colorHex: color.hex,
-      sku: `${slug}-${size.toLowerCase()}-${color.name.toLowerCase()}`.replace(
-        /[^a-z0-9-]/g,
-        "",
-      ),
-      stock: 10,
-    })),
-  );
+  return SIZES.map((size) => ({
+    size,
+    sku: `${slug}-${size.toLowerCase()}`.replace(/[^a-z0-9-]/g, ""),
+    stock: 10,
+  }));
 }
 
 async function seedProduct(

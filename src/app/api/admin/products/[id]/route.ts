@@ -1,6 +1,7 @@
 import { Category } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { isValidProductCategory } from "@/lib/categories";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -44,7 +45,7 @@ export async function PATCH(
         ? parseInt(String(body.compareAtPrice), 10)
         : null;
     }
-    if (body.category && ["WOMEN", "MEN"].includes(body.category)) {
+    if (body.category && isValidProductCategory(body.category)) {
       data.category = body.category as Category;
     }
     if (Array.isArray(body.images)) {

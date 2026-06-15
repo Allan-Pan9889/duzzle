@@ -125,7 +125,9 @@ export const DEMO_WOMEN_PRODUCTS = attachImages(WOMEN_DEFS, WOMEN_IMAGE_POOL);
 export const DEMO_MEN_PRODUCTS = attachImages(MEN_DEFS, MEN_IMAGE_POOL);
 
 export function getDemoCatalog(category: Category): DemoCatalogProduct[] {
-  return category === "WOMEN" ? DEMO_WOMEN_PRODUCTS : DEMO_MEN_PRODUCTS;
+  if (category === "WOMEN") return DEMO_WOMEN_PRODUCTS;
+  if (category === "MEN") return DEMO_MEN_PRODUCTS;
+  return [];
 }
 
 export function getAllDemoCatalogProducts(): DemoCatalogProduct[] {

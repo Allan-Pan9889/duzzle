@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
 
 const navLinks = [
   { href: "/women", label: "Women" },
   { href: "/men", label: "Men" },
+  { href: "/kids", label: "Kids" },
   { href: "/new-arrivals", label: "New Arrivals" },
 ];
 
@@ -39,9 +41,10 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-4">
+          <HeaderSearch />
           <Link
             href="/search"
-            className="hidden text-sm text-primary transition-colors hover:text-muted sm:block"
+            className="text-sm text-primary transition-colors hover:text-muted sm:hidden"
             aria-label="Search"
           >
             Search

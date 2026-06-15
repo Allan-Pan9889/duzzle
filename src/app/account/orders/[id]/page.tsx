@@ -11,7 +11,6 @@ import { formatPrice } from "@/lib/utils";
 type OrderItem = {
   productName: string;
   size: string;
-  color: string;
   price: number;
   quantity: number;
 };
@@ -152,7 +151,7 @@ export default function OrderDetailPage() {
               <div>
                 <p className="text-primary">{item.productName}</p>
                 <p className="text-xs text-muted">
-                  {item.size} / {item.color} × {item.quantity}
+                  Size {item.size} × {item.quantity}
                 </p>
               </div>
               <p className="text-primary">{formatPrice(item.price * item.quantity)}</p>

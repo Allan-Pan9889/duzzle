@@ -1,14 +1,11 @@
 import { Category } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { isValidProductCategory } from "@/lib/categories";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 
 const SIZES = ["S", "M", "L", "XL"];
-const COLORS = [
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
-];
 
 export async function GET() {
   try {
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and valid price required" }, { status: 400 });
     }
 
-    if (!["WOMEN", "MEN"].includes(category)) {
+    if (!isValidProductCategory(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
@@ -80,15 +77,11 @@ export async function POST(request: NextRequest) {
         isActive,
         isDemo: false,
         variants: {
-          create: SIZES.flatMap((size) =>
-            COLORS.map((color) => ({
-              size,
-              color: color.name,
-              colorHex: color.hex,
-              sku: `${slug}-${size}-${color.name}`.toUpperCase(),
-              stock,
-            })),
-          ),
+          create: SIZES.map((size) => ({
+            size,
+            sku: `${slug}-${size}`.toUpperCase(),
+            stock,
+          })),
         },
       },
       include: { variants: true },

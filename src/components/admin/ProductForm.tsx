@@ -1,5 +1,6 @@
 "use client";
 
+import { Category } from "@prisma/client";
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -7,7 +8,6 @@ import { Input } from "@/components/ui/Input";
 type Variant = {
   id: string;
   size: string;
-  color: string;
   stock: number;
 };
 
@@ -16,7 +16,7 @@ export type ProductFormValues = {
   description: string;
   price: number;
   compareAtPrice: number | null;
-  category: "WOMEN" | "MEN";
+  category: Category;
   images: string[];
   stock: number;
   isActive: boolean;
@@ -38,7 +38,7 @@ export function ProductForm({
   const [compareAtPrice, setCompareAtPrice] = useState(
     initial?.compareAtPrice ? String(initial.compareAtPrice) : "",
   );
-  const [category, setCategory] = useState<"WOMEN" | "MEN">(initial?.category ?? "WOMEN");
+  const [category, setCategory] = useState<Category>(initial?.category ?? "WOMEN");
   const [imagesText, setImagesText] = useState((initial?.images ?? []).join("\n"));
   const [stock, setStock] = useState(String(initial?.stock ?? 10));
   const [isActive, setIsActive] = useState(initial?.isActive !== false);
@@ -104,11 +104,12 @@ export function ProductForm({
           <label className="mb-2 block text-sm text-primary">Category</label>
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value as "WOMEN" | "MEN")}
+            onChange={(e) => setCategory(e.target.value as Category)}
             className="w-full border border-gray-200 px-4 py-3 text-sm"
           >
             <option value="WOMEN">Women</option>
             <option value="MEN">Men</option>
+            <option value="KIDS">Kids</option>
           </select>
         </div>
         {!variants.length && (
@@ -146,9 +147,7 @@ export function ProductForm({
                 key={v.id}
                 className="flex items-center justify-between border-b border-gray-50 px-3 py-2 text-sm"
               >
-                <span className="text-muted">
-                  {v.size} / {v.color}
-                </span>
+                <span className="text-muted">{v.size}</span>
                 <Input
                   type="number"
                   className="w-20 py-1"

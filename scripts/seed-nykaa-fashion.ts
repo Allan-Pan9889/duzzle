@@ -9,18 +9,15 @@ import {
   NYKAA_IMAGE_REFERER,
   type NykaaScrapedProduct,
 } from "./nykaa-fashion-api";
+import { DEMO_TARGET_PER_CATEGORY } from "./scrape-config";
 
 const prisma = new PrismaClient();
 
-const PRODUCTS_PER_CATEGORY = 50;
+const PRODUCTS_PER_CATEGORY = DEMO_TARGET_PER_CATEGORY;
 const RATE_LIMIT_MS = 350;
 const IMAGE_DIR = join(process.cwd(), "public", "demo", "products");
 
 const SIZES = ["S", "M", "L", "XL"] as const;
-const COLORS = [
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
-] as const;
 
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -86,7 +83,7 @@ function slugify(name: string): string {
 
 async function clearDemoProducts(): Promise<void> {
   const demoProducts = await prisma.product.findMany({
-    where: { isDemo: true },
+    where: { isDemo: true, category: { in: ["WOMEN", "MEN"] } },
     select: {
       id: true,
       variants: { select: { id: true } },
@@ -158,25 +155,18 @@ async function resolveProductImages(
 }
 
 function buildVariants(slug: string) {
-  return SIZES.flatMap((size) =>
-    COLORS.map((color) => ({
-      size,
-      color: color.name,
-      colorHex: color.hex,
-      sku: `${slug}-${size.toLowerCase()}-${color.name.toLowerCase()}`.replace(
-        /[^a-z0-9-]/g,
-        "",
-      ),
-      stock: 10,
-    })),
-  );
+  return SIZES.map((size) => ({
+    size,
+    sku: `${slug}-${size.toLowerCase()}`.replace(/[^a-z0-9-]/g, ""),
+    stock: 10,
+  }));
 }
 
 async function seedProduct(
   category: Category,
   product: NykaaScrapedProduct,
   usedSlugs: Set<string>,
-): Promise<void> {
+): Promise<boolean> {
   let slug = slugify(product.name);
   if (!slug) slug = `nykaa-${category.toLowerCase()}-${product.nykaaId}`;
 
@@ -189,7 +179,8 @@ async function seedProduct(
 
   const images = await resolveProductImages(uniqueSlug, product.imageUrls);
   if (images.length === 0) {
-    throw new Error(`Failed to download image for ${product.name}`);
+    console.warn(`  ✗ skipped (image download failed): ${product.name}`);
+    return false;
   }
 
   await prisma.product.create({
@@ -200,6 +191,7 @@ async function seedProduct(
       price: product.price,
       compareAtPrice: product.compareAtPrice,
       category,
+      subCategory: product.subCategory,
       images,
       isDemo: true,
       isActive: true,
@@ -210,20 +202,98 @@ async function seedProduct(
   });
 
   console.log(`  ✓ ${product.name}`);
+  return true;
 }
 
-async function scrapeCategory(category: Category): Promise<NykaaScrapedProduct[]> {
+async function scrapeCategory(
+  category: "WOMEN" | "MEN",
+  fetchLimit = PRODUCTS_PER_CATEGORY,
+): Promise<NykaaScrapedProduct[]> {
   const categoryId = NYKAA_CATEGORY_IDS[category];
   console.log(`Fetching Nykaa Fashion ${category} (categoryId=${categoryId})...`);
   await sleep(RATE_LIMIT_MS);
 
   const products = await fetchNykaaCategoryProducts(
     categoryId,
-    PRODUCTS_PER_CATEGORY,
+    category,
+    fetchLimit,
   );
 
   console.log(`  Found ${products.length} clothing items`);
   return products;
+}
+
+async function loadUsedSlugs(): Promise<Set<string>> {
+  const products = await prisma.product.findMany({
+    where: { isDemo: true, category: { in: ["WOMEN", "MEN"] } },
+    select: { slug: true },
+  });
+  return new Set(products.map((p) => p.slug));
+}
+
+async function loadExistingNames(category: Category): Promise<Set<string>> {
+  const products = await prisma.product.findMany({
+    where: { isDemo: true, category },
+    select: { name: true },
+  });
+  return new Set(products.map((p) => p.name.toLowerCase()));
+}
+
+async function seedCategory(
+  category: "WOMEN" | "MEN",
+  usedSlugs: Set<string>,
+  resume: boolean,
+): Promise<void> {
+  const existingCount = await prisma.product.count({
+    where: { isDemo: true, category },
+  });
+
+  if (resume && existingCount >= PRODUCTS_PER_CATEGORY) {
+    console.log(`\n=== ${category} ===`);
+    console.log(`  Already at ${existingCount}/${PRODUCTS_PER_CATEGORY}, skipping.`);
+    return;
+  }
+
+  const need = PRODUCTS_PER_CATEGORY - existingCount;
+  const fetchLimit = resume ? PRODUCTS_PER_CATEGORY + 200 : PRODUCTS_PER_CATEGORY;
+  const existingNames = resume ? await loadExistingNames(category) : new Set<string>();
+
+  console.log(`\n=== ${category} ===`);
+  if (resume && existingCount > 0) {
+    console.log(`  Resuming: ${existingCount}/${PRODUCTS_PER_CATEGORY} in DB, need ${need} more`);
+  }
+
+  const products = await scrapeCategory(category, fetchLimit);
+  let seeded = 0;
+  let skipped = 0;
+
+  for (const product of products) {
+    if (existingCount + seeded >= PRODUCTS_PER_CATEGORY) break;
+
+    if (existingNames.has(product.name.toLowerCase())) {
+      skipped++;
+      continue;
+    }
+
+    const ok = await seedProduct(category, product, usedSlugs);
+    if (ok) {
+      seeded++;
+      existingNames.add(product.name.toLowerCase());
+    }
+    await sleep(RATE_LIMIT_MS);
+  }
+
+  const finalCount = await prisma.product.count({
+    where: { isDemo: true, category },
+  });
+
+  if (finalCount < PRODUCTS_PER_CATEGORY) {
+    console.warn(
+      `  Warning: ${category} at ${finalCount}/${PRODUCTS_PER_CATEGORY} (${skipped} duplicates skipped).`,
+    );
+  } else {
+    console.log(`  ${category} complete: ${finalCount}/${PRODUCTS_PER_CATEGORY}`);
+  }
 }
 
 async function main(): Promise<void> {
@@ -243,25 +313,24 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log("Clearing existing demo products...");
-  await clearDemoProducts();
+  const resume = process.env.SEED_RESUME === "1";
+  const onlyCategory = process.env.SEED_CATEGORY as "WOMEN" | "MEN" | undefined;
+  const categories: Array<"WOMEN" | "MEN"> =
+    onlyCategory === "WOMEN" || onlyCategory === "MEN"
+      ? [onlyCategory]
+      : ["WOMEN", "MEN"];
 
-  const usedSlugs = new Set<string>();
+  if (!resume) {
+    console.log("Clearing existing demo products...");
+    await clearDemoProducts();
+  } else {
+    console.log(`Resume mode: keeping existing products, targeting ${categories.join(", ")}`);
+  }
 
-  for (const category of ["WOMEN", "MEN"] as const) {
-    console.log(`\n=== ${category} ===`);
-    const products = await scrapeCategory(category);
+  const usedSlugs = resume ? await loadUsedSlugs() : new Set<string>();
 
-    if (products.length < PRODUCTS_PER_CATEGORY) {
-      console.warn(
-        `  Warning: only ${products.length}/${PRODUCTS_PER_CATEGORY} clothing products available after filtering.`,
-      );
-    }
-
-    for (const product of products) {
-      await seedProduct(category, product, usedSlugs);
-      await sleep(RATE_LIMIT_MS);
-    }
+  for (const category of categories) {
+    await seedCategory(category, usedSlugs, resume);
   }
 
   clearNextImageCache();

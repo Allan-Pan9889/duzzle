@@ -13,6 +13,11 @@ const categories = [
     label: "Men",
     image: "/demo/home/category-men.jpg",
   },
+  {
+    href: "/kids",
+    label: "Kids",
+    image: "/demo/home/category-kids.jpg",
+  },
 ];
 
 export function CategoryGrid() {
@@ -21,7 +26,7 @@ export function CategoryGrid() {
       <h2 className="mb-8 text-center font-serif text-2xl tracking-wide text-primary">
         Shop by Category
       </h2>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((cat) => (
           <Link
             key={cat.href}

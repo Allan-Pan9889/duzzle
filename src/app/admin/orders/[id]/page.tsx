@@ -31,7 +31,6 @@ type Order = {
   items: {
     productName: string;
     size: string;
-    color: string;
     price: number;
     quantity: number;
   }[];
@@ -123,7 +122,7 @@ export default function AdminOrderDetailPage() {
             {order.items.map((item, i) => (
               <li key={i} className="flex justify-between">
                 <span>
-                  {item.productName} ({item.size}/{item.color}) × {item.quantity}
+                  {item.productName} ({item.size}) × {item.quantity}
                 </span>
                 <span>{formatPrice(item.price * item.quantity)}</span>
               </li>

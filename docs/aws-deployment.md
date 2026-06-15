@@ -363,6 +363,8 @@ gunzip -c /var/backups/duzzle/duzzle-2026-06-08.sql.gz | psql "postgresql://duzz
 
 ## 14. 日常更新发布
 
+### 14.1 常规代码更新（无 Schema 变更）
+
 ```bash
 cd /var/www/duzzle
 git pull origin main
@@ -371,7 +373,82 @@ npm run build
 pm2 restart duzzle
 ```
 
-Schema 变更时：
+### 14.2 含 Schema / 商品库变更（如 2026-06 大版本）
+
+本次类型更新包括：`KIDS` 类目、`subCategory` 字段、移除变体 `color`、1500 演示商品图等。
+
+**在 EC2 上按顺序执行：**
+
+```bash
+cd /var/www/duzzle
+git pull origin main
+npm ci
+
+# 1) 若从旧版升级且库内仍有「每尺码 × 多颜色」变体，先合并再改表
+npx tsx scripts/migrate-remove-color.ts
+
+# 2) 同步 Prisma Schema（新增 KIDS / subCategory，删除 color 列）
+npx prisma db push --accept-data-loss
+npx prisma generate
+
+# 3) 构建（必须在 generate 之后）
+npm run build
+
+# 4) 导入演示商品（三选一，见下）
+# …
+
+# 5) 重启
+pm2 restart duzzle
+```
+
+**演示商品入库（三选一）：**
+
+| 方式 | 适用 | 命令 |
+|------|------|------|
+| A. 重新采集（慢） | 仓库无图片或需刷新价格 | `npm run seed:nykaa` 后 `npm run seed:firstcry`（约 30–60 分钟，需出网） |
+| B. 仅补男装断点 | 女装/童装已有，男装未完成 | `npm run seed:nykaa:resume-men` |
+| C. 本地 dump 恢复（最快） | 本地已跑完 1500 条 | 见 §14.3 |
+
+> `git pull` 已包含 `public/demo/products/` 图片时，仍须 **写入 PostgreSQL**（图片路径在库里）。只 pull 代码不会自动出现商品列表。
+
+### 14.3 从本地数据库恢复到 EC2（推荐，省采集时间）
+
+在**本地 Mac**（已有 1500 条商品）：
+
+```bash
+pg_dump "postgresql://a1@localhost:5432/duzzle" \
+  --no-owner --no-acl \
+  | gzip > duzzle-demo-$(date +%F).sql.gz
+scp -i ~/Downloads/duzzle-key.pem duzzle-demo-*.sql.gz ec2-user@<EC2_IP>:~/
+```
+
+在 **EC2** 上（会覆盖库内 `Product` 等表数据，**先备份**）：
+
+```bash
+# 可选：备份当前库
+pg_dump "postgresql://duzzle:PASSWORD@127.0.0.1:5432/duzzle" | gzip > ~/duzzle-backup-$(date +%F).sql.gz
+
+# 恢复
+gunzip -c ~/duzzle-demo-*.sql.gz | psql "postgresql://duzzle:PASSWORD@127.0.0.1:5432/duzzle"
+
+cd /var/www/duzzle
+npm run clear:image-cache
+rm -rf .next
+npm run build
+pm2 restart duzzle
+```
+
+### 14.4 更新后验证
+
+```bash
+curl -s "http://127.0.0.1:3000/api/products?category=WOMEN&limit=1" | head -c 200
+curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1:3000/women"
+curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1:3000/kids"
+```
+
+浏览器访问 `/search?minPrice=100&maxPrice=999`、`/women`、`/men`、`/kids`，点开任意商品详情页，确认非 404。
+
+Schema 仅有小改动、无 `--accept-data-loss` 时：
 
 ```bash
 npm run db:push

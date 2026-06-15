@@ -120,7 +120,6 @@ export async function POST(request: NextRequest) {
               variantId: item.variantId,
               productName: item.variant.product.name,
               size: item.variant.size,
-              color: item.variant.color,
               price: item.variant.product.price,
               quantity: item.quantity,
             })),
