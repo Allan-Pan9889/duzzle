@@ -83,6 +83,42 @@ export async function getProductBySlug(slug: string) {
   });
 }
 
+export async function getNewArrivalsForHome() {
+  const select = {
+    id: true,
+    slug: true,
+    name: true,
+    price: true,
+    compareAtPrice: true,
+    images: true,
+    category: true,
+    createdAt: true,
+  } as const;
+
+  const [women, men, kids] = await Promise.all([
+    prisma.product.findMany({
+      where: { isActive: true, category: "WOMEN" },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select,
+    }),
+    prisma.product.findMany({
+      where: { isActive: true, category: "MEN" },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select,
+    }),
+    prisma.product.findMany({
+      where: { isActive: true, category: "KIDS" },
+      orderBy: { createdAt: "desc" },
+      take: 2,
+      select,
+    }),
+  ]);
+
+  return [...women, ...men, ...kids];
+}
+
 export async function getLatestProducts(limit = 8) {
   return prisma.product.findMany({
     where: { isActive: true },

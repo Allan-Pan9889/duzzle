@@ -1,15 +1,15 @@
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { ProductRow } from "@/components/home/ProductRow";
-import { getLatestProducts } from "@/lib/products";
+import { getNewArrivalsForHome } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  let products: Awaited<ReturnType<typeof getLatestProducts>> = [];
+  let products: Awaited<ReturnType<typeof getNewArrivalsForHome>> = [];
 
   try {
-    products = await getLatestProducts(8);
+    products = await getNewArrivalsForHome();
   } catch {
     products = [];
   }

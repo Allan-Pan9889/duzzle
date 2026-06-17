@@ -1,4 +1,4 @@
-import { Category } from "@prisma/client";
+import { Category, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { isValidProductCategory } from "@/lib/categories";
@@ -7,16 +7,40 @@ import { slugify } from "@/lib/slug";
 
 const SIZES = ["S", "M", "L", "XL"];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
 
-    const products = await prisma.product.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        variants: { select: { stock: true } },
-      },
-    });
+    const { searchParams } = request.nextUrl;
+    const search = searchParams.get("search")?.trim() || undefined;
+    const category = searchParams.get("category") as Category | null;
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
+
+    const where: Prisma.ProductWhereInput = {
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { slug: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(category && isValidProductCategory(category) ? { category } : {}),
+    };
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          variants: { select: { stock: true } },
+        },
+      }),
+      prisma.product.count({ where }),
+    ]);
 
     const result = products.map((p) => ({
       id: p.id,
@@ -29,7 +53,13 @@ export async function GET() {
       stock: p.variants.reduce((sum, v) => sum + v.stock, 0),
     }));
 
-    return NextResponse.json({ products: result });
+    return NextResponse.json({
+      products: result,
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

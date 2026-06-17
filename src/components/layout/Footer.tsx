@@ -73,6 +73,7 @@ export function Footer() {
                   +91 8680014906
                 </a>
               </li>
+              <li>No.85/86, Anna Salai, Guindy, Chennai - 600032</li>
             </ul>
           </div>
         </div>

@@ -26,7 +26,7 @@ const slides = [
 export function HeroBanner() {
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative aspect-[16/7] w-full min-h-[320px] sm:aspect-[16/6]">
+      <div className="relative aspect-[21/8] w-full max-h-[min(42vh,420px)] min-h-[220px] sm:aspect-[21/7]">
         <Image
           src={slides[0].image}
           alt={slides[0].title}
@@ -38,7 +38,7 @@ export function HeroBanner() {
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
-          <h2 className="font-serif text-3xl tracking-wide sm:text-5xl">
+          <h2 className="font-serif text-2xl tracking-wide sm:text-4xl">
             {slides[0].title}
           </h2>
           <p className="mt-3 max-w-md text-sm text-gray-200 sm:text-base">

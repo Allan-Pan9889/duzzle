@@ -22,8 +22,8 @@ const categories = [
 
 export function CategoryGrid() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <h2 className="mb-8 text-center font-serif text-2xl tracking-wide text-primary">
+    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <h2 className="mb-6 text-center font-serif text-2xl tracking-wide text-primary">
         Shop by Category
       </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -31,7 +31,7 @@ export function CategoryGrid() {
           <Link
             key={cat.href}
             href={cat.href}
-            className="group relative aspect-[4/5] overflow-hidden bg-surface"
+            className="group relative aspect-[4/5] max-h-[280px] overflow-hidden bg-surface sm:max-h-none"
           >
             <Image
               src={cat.image}
