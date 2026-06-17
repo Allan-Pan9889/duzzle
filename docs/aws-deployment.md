@@ -203,8 +203,11 @@ npm run build
 npm run db:push
 npm run db:seed
 
-# 可选：导入演示商品（Myntra 图片在 public/demo/）
-npm run seed:urbanic
+# 可选：导入演示商品
+# npm run seed:urbanic          # 旧 Urbanic 演示
+npm run seed:nykaa              # 女装 + 男装（各 500，需出网，较慢）
+npm run seed:firstcry           # 童装 500
+# 男装中断续跑：npm run seed:nykaa:resume-men
 ```
 
 若 `db:push` 失败，检查：

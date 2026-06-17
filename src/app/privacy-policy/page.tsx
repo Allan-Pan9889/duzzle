@@ -1,40 +1,61 @@
+import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
+
+export const metadata = {
+  title: "Privacy Policy | Duzzle",
+};
+
 export default function PrivacyPolicyPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="font-serif text-3xl text-primary">Privacy Policy</h1>
-      <div className="mt-8 space-y-6 text-sm leading-relaxed text-muted">
-        <section>
-          <h2 className="mb-2 font-medium text-primary">Information We Collect</h2>
-          <p>
-            We collect your mobile number, delivery address, and order history to process
-            purchases and provide customer support.
-          </p>
-        </section>
-        <section>
-          <h2 className="mb-2 font-medium text-primary">How We Use Your Data</h2>
-          <p>
-            Your information is used solely to fulfil orders, send order updates, and improve
-            your shopping experience. We do not sell your personal information to third parties.
-          </p>
-        </section>
-        <section>
-          <h2 className="mb-2 font-medium text-primary">Data Security</h2>
-          <p>
-            We use industry-standard security measures to protect your data. Payment information
-            is processed securely through Razorpay and is never stored on our servers.
-          </p>
-        </section>
-        <section>
-          <h2 className="mb-2 font-medium text-primary">Contact</h2>
-          <p>
-            For privacy-related questions, email{" "}
-            <a href="mailto:duzzlecode2026@gmail.com" className="text-primary underline">
-              duzzlecode2026@gmail.com
-            </a>
-            .
-          </p>
-        </section>
-      </div>
-    </div>
+    <ContentPage title="Privacy Policy">
+      <p>
+        At Duzzle, we value your privacy and are committed to protecting your personal
+        information.
+      </p>
+
+      <ContentSection title="Information We Collect">
+        <ul className="list-disc space-y-2 pl-5">
+          <li>Name</li>
+          <li>Email address</li>
+          <li>Phone number</li>
+          <li>Shipping and billing address</li>
+          <li>Payment information (processed securely through payment gateways)</li>
+          <li>Browsing and device information</li>
+        </ul>
+      </ContentSection>
+
+      <ContentSection title="How We Use Your Information">
+        <ul className="list-disc space-y-2 pl-5">
+          <li>Process orders and payments</li>
+          <li>Provide customer support</li>
+          <li>Send order updates</li>
+          <li>Improve website performance</li>
+          <li>Send promotional communications (with your consent)</li>
+        </ul>
+      </ContentSection>
+
+      <ContentSection title="Data Protection">
+        <p>We implement industry-standard security measures to protect your data.</p>
+      </ContentSection>
+
+      <ContentSection title="Third-Party Services">
+        <p>
+          We may share information with shipping providers, payment processors, and analytics
+          services as necessary to operate our business.
+        </p>
+      </ContentSection>
+
+      <ContentSection title="Your Rights">
+        <p>Access, update, or delete your personal information by contacting us.</p>
+      </ContentSection>
+
+      <ContentSection title="Contact">
+        <p>
+          Email:{" "}
+          <a href="mailto:duzzlecode2026@gmail.com" className="text-primary underline">
+            duzzlecode2026@gmail.com
+          </a>
+        </p>
+      </ContentSection>
+    </ContentPage>
   );
 }

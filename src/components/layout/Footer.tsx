@@ -8,9 +8,12 @@ const shopLinks = [
 ];
 
 const helpLinks = [
+  { href: "/about", label: "About Us" },
   { href: "/shipping-policy", label: "Shipping" },
-  { href: "/return-policy", label: "Returns" },
-  { href: "/privacy-policy", label: "Privacy" },
+  { href: "/return-policy", label: "Return & Refund Policy" },
+  { href: "/privacy-policy", label: "Privacy Policy" },
+  { href: "/terms-and-conditions", label: "Terms & Conditions" },
+  { href: "/cookie-policy", label: "Cookie Policy" },
   { href: "/contact", label: "Contact" },
 ];
 
