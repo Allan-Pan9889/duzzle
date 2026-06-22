@@ -1,4 +1,5 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
+import { COMPANY_LEGAL_NAME } from "@/lib/company";
 
 export const metadata = {
   title: "Privacy Policy | Duzzlecode",
@@ -56,6 +57,8 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
       </ContentSection>
+
+      <p className="border-t border-gray-100 pt-6 text-primary">{COMPANY_LEGAL_NAME}</p>
     </ContentPage>
   );
 }

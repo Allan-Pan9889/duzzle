@@ -1,3 +1,5 @@
+import { COMPANY_ADDRESS, COMPANY_LEGAL_NAME } from "@/lib/company";
+
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -26,6 +28,12 @@ export default function ContactPage() {
             +91 8680014906
           </a>
           <p className="mt-2 text-xs text-muted">Mon–Sat, 10:00 AM – 6:00 PM IST</p>
+        </div>
+
+        <div className="border border-gray-100 p-6">
+          <h2 className="text-sm font-medium text-primary">Address</h2>
+          <p className="mt-2 text-sm text-muted">{COMPANY_ADDRESS}</p>
+          <p className="mt-2 text-sm text-muted">{COMPANY_LEGAL_NAME}</p>
         </div>
 
         <div className="border border-gray-100 p-6">

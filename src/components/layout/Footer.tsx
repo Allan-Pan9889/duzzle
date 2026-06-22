@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { COMPANY_ADDRESS, COMPANY_LEGAL_NAME } from "@/lib/company";
 
 const shopLinks = [
   { href: "/women", label: "Women" },
@@ -73,7 +74,8 @@ export function Footer() {
                   +91 8680014906
                 </a>
               </li>
-              <li>No.85/86, Anna Salai, Guindy, Chennai - 600032</li>
+              <li>{COMPANY_ADDRESS}</li>
+              <li>{COMPANY_LEGAL_NAME}</li>
             </ul>
           </div>
         </div>
