@@ -1,7 +1,7 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
 
 export const metadata = {
-  title: "Return & Refund Policy | Duzzle",
+  title: "Return & Refund Policy | Duzzlecode",
 };
 
 export default function ReturnPolicyPage() {

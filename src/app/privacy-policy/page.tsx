@@ -1,14 +1,14 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
 
 export const metadata = {
-  title: "Privacy Policy | Duzzle",
+  title: "Privacy Policy | Duzzlecode",
 };
 
 export default function PrivacyPolicyPage() {
   return (
     <ContentPage title="Privacy Policy">
       <p>
-        At Duzzle, we value your privacy and are committed to protecting your personal
+        At Duzzlecode, we value your privacy and are committed to protecting your personal
         information.
       </p>
 

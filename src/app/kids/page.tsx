@@ -2,7 +2,7 @@ import { ProductListingPage } from "@/components/product/ProductListingPage";
 import { parseProductFilters, type ProductFilterSearchParams } from "@/lib/parse-product-filters";
 
 export const metadata = {
-  title: "Kids | Duzzle",
+  title: "Kids | Duzzlecode",
 };
 
 export const dynamic = "force-dynamic";

@@ -31,7 +31,7 @@ export function CartItem({
   updating?: boolean;
 }) {
   const { product } = item.variant;
-  const image = product.images[0] || "/duzzle.png";
+  const image = product.images[0] || "/duzzlecode.png";
 
   return (
     <div className="flex gap-4 border-b border-gray-100 py-6">

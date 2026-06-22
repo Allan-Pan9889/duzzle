@@ -1,14 +1,14 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
 
 export const metadata = {
-  title: "Terms & Conditions | Duzzle",
+  title: "Terms & Conditions | Duzzlecode",
 };
 
 export default function TermsAndConditionsPage() {
   return (
     <ContentPage title="Terms & Conditions">
       <p>
-        Welcome to Duzzle. By accessing and using our website, you agree to comply with these
+        Welcome to Duzzlecode. By accessing and using our website, you agree to comply with these
         Terms &amp; Conditions.
       </p>
 
@@ -48,7 +48,7 @@ export default function TermsAndConditionsPage() {
 
       <ContentSection title="Intellectual Property">
         <p>
-          All content, including logos, images, designs, and text, belongs to Duzzle and may not
+          All content, including logos, images, designs, and text, belongs to Duzzlecode and may not
           be used without permission.
         </p>
       </ContentSection>

@@ -1,7 +1,7 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
 
 export const metadata = {
-  title: "Cookie Policy | Duzzle",
+  title: "Cookie Policy | Duzzlecode",
 };
 
 export default function CookiePolicyPage() {

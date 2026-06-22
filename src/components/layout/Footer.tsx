@@ -79,7 +79,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} Duzzle. All rights reserved.
+          © {new Date().getFullYear()} Duzzlecode. All rights reserved.
         </div>
       </div>
     </footer>

@@ -135,7 +135,7 @@ export function CheckoutClient() {
         key: razorpayKeyId,
         amount: order.total * 100,
         currency: "INR",
-        name: "Duzzle",
+        name: "Duzzlecode",
         description: `Order ${order.orderNumber}`,
         order_id: order.razorpayOrderId,
         prefill: {

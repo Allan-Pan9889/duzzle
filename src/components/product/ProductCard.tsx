@@ -13,7 +13,7 @@ export type ProductCardData = {
 };
 
 export function ProductCard({ product }: { product: ProductCardData }) {
-  const image = product.images[0] || "/duzzle.png";
+  const image = product.images[0] || "/duzzlecode.png";
   const discount = calcDiscount(product.price, product.compareAtPrice);
 
   return (

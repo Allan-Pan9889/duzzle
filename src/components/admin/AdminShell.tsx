@@ -56,7 +56,7 @@ export function AdminShell({
       <aside className="relative flex w-56 shrink-0 flex-col border-r border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-4 py-5">
           <Link href="/admin" className="font-serif text-lg tracking-[0.2em] text-primary">
-            DUZZLE
+            DUZZLECODE
           </Link>
           <p className="mt-1 text-xs text-muted">Admin</p>
         </div>

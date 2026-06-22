@@ -6,7 +6,7 @@ export default function ShippingPolicyPage() {
         <section>
           <h2 className="mb-2 font-medium text-primary">Delivery Coverage</h2>
           <p>
-            Duzzle delivers across India. Please provide a valid 6-digit Pin Code at checkout
+            Duzzlecode delivers across India. Please provide a valid 6-digit Pin Code at checkout
             so we can confirm delivery to your area.
           </p>
         </section>

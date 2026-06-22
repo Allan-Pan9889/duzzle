@@ -15,7 +15,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Duzzle — Fashion for Every Style",
+  title: "Duzzlecode — Fashion for Every Style",
   description:
     "Premium men's and women's fashion. Shop the latest trends at fair prices.",
 };

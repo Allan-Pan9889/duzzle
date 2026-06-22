@@ -6,7 +6,7 @@ import { isLocalDemoAsset } from "@/lib/utils";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
-  const gallery = images.length > 0 ? images : ["/duzzle.png"];
+  const gallery = images.length > 0 ? images : ["/duzzlecode.png"];
 
   return (
     <div className="space-y-4">

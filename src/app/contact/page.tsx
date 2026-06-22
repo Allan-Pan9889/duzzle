@@ -3,7 +3,7 @@ export default function ContactPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <h1 className="font-serif text-3xl text-primary">Contact Us</h1>
       <p className="mt-4 text-sm text-muted">
-        We&apos;re here to help with orders, returns, and any questions about Duzzle.
+        We&apos;re here to help with orders, returns, and any questions about Duzzlecode.
       </p>
 
       <div className="mt-10 space-y-6">
@@ -34,10 +34,10 @@ export default function ContactPage() {
             Email us directly and we&apos;ll respond within 24 hours.
           </p>
           <a
-            href="mailto:duzzlecode2026@gmail.com?subject=Duzzle%20Inquiry"
+            href="mailto:duzzlecode2026@gmail.com?subject=Duzzlecode%20Inquiry"
             className="mt-4 inline-block border border-primary px-6 py-3 text-sm text-primary transition-colors hover:bg-primary hover:text-white"
           >
-            Email Duzzle
+            Email Duzzlecode
           </a>
         </div>
       </div>

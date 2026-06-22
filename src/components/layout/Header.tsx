@@ -37,7 +37,7 @@ export function Header() {
           href="/"
           className="absolute left-1/2 -translate-x-1/2 font-serif text-xl tracking-[0.25em] text-primary"
         >
-          DUZZLE
+          DUZZLECODE
         </Link>
 
         <div className="flex items-center gap-4">

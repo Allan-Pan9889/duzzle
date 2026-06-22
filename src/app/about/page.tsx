@@ -1,14 +1,14 @@
 import { ContentPage } from "@/components/layout/ContentPage";
 
 export const metadata = {
-  title: "About Us | Duzzle",
+  title: "About Us | Duzzlecode",
 };
 
 export default function AboutPage() {
   return (
     <ContentPage title="About Us">
       <p>
-          We launched Duzzle Fashion in 2026, as a curated and managed marketplace with an
+          We launched Duzzlecode Fashion in 2026, as a curated and managed marketplace with an
           endeavor to inspire consumers to make fashion and lifestyle choices that best suit
           them. We have a wide assortment of offerings, across price points, to cater to women,
           men and children of diverse demographics. Presently, within these consumer segments,
