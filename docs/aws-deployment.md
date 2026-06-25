@@ -596,6 +596,44 @@ sudo -u postgres psql -c "SELECT 1;"
 
 检查 `.env` 中 `DATABASE_URL` 是否指向 `127.0.0.1`。
 
+### 创建订单报错 `Failed to create SabPaisa payment session` 或 SabPaisa API 错误
+
+在 EC2 上先跑连通性测试（会打出具体错误码，如 `INVALID_SIGNATURE`、`UNAUTHORIZED`）：
+
+```bash
+cd /var/www/duzzle
+git pull origin main
+npm run test:sabpaisa
+```
+
+**最常见原因：生产密钥配了沙箱地址（或反过来）**
+
+```env
+# 生产站点 shop.duzzlese.com 必须同时满足：
+SABPAISA_BASE_URL="https://merchant-api.sabpaisa.in"
+NEXT_PUBLIC_APP_URL="https://shop.duzzlese.com"
+# API Key / Secret / Merchant ID 必须是 SabPaisa 提供的【生产】凭证
+```
+
+若 `SABPAISA_BASE_URL` 未设置，代码默认走 **staging**，生产密钥会失败。
+
+其他常见错误：
+
+| 错误码 | 处理 |
+|--------|------|
+| `INVALID_SIGNATURE` | 检查 `SABPAISA_SECRET_KEY` 是否与商户号匹配 |
+| `UNAUTHORIZED` | 检查 `SABPAISA_API_KEY` |
+| `INVALID_CUSTOMER_NAME` | 收货人姓名仅允许英文字母和空格（已自动清洗） |
+| `INVALID_PHONE` | 地址手机号须为 10 位印度号码（6–9 开头） |
+| `DUPLICATE_TRANSACTION` | 同一订单号重复发起，重新下单即可 |
+
+修复 `.env` 后：
+
+```bash
+pm2 restart duzzle
+npm run test:sabpaisa
+```
+
 ### 创建订单报错 `invalid input value for enum "PaymentMethod": "SABPAISA"`
 
 代码已切到 SabPaisa，但 **PostgreSQL 枚举仍是旧值 `RAZORPAY`**。在 EC2 上执行一次迁移：

@@ -65,6 +65,47 @@ export function isValidCheckoutEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+/** SabPaisa allows letters and spaces only (2–100 chars). */
+export function sanitizeCustomerName(name: string): string {
+  const cleaned = name
+    .replace(/[^a-zA-Z\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length < 2) return "Customer";
+  return cleaned.slice(0, 100);
+}
+
+type SabpaisaApiErrorBody = {
+  success?: boolean;
+  message?: string;
+  errorMessage?: string;
+  error?: { code?: string; message?: string };
+  traceId?: string;
+};
+
+function parseSabpaisaApiError(data: SabpaisaApiErrorBody, status: number): string {
+  const code = data.error?.code;
+  const detail =
+    data.error?.message ||
+    data.errorMessage ||
+    data.message ||
+    `SabPaisa API error (HTTP ${status})`;
+  return code ? `${code}: ${detail}` : detail;
+}
+
+function warnIfSabpaisaEnvMismatch(): void {
+  const appUrl = getAppBaseUrl();
+  const baseUrl = getSabpaisaBaseUrl();
+  if (
+    appUrl.includes("duzzlese.com") &&
+    baseUrl.includes("staging-sb-merchant-api")
+  ) {
+    console.warn(
+      "[SabPaisa] NEXT_PUBLIC_APP_URL is production but SABPAISA_BASE_URL points to staging. Set SABPAISA_BASE_URL=https://merchant-api.sabpaisa.in",
+    );
+  }
+}
+
 export function generatePaymentChecksum(
   merchantTxnId: string,
   amountPaise: number,
@@ -151,6 +192,8 @@ export async function createPaymentSession(
     throw new Error("SabPaisa is not configured");
   }
 
+  warnIfSabpaisaEnvMismatch();
+
   const timestamp = Math.floor(Date.now() / 1000);
   const checksum = generatePaymentChecksum(
     input.merchantTxnId,
@@ -158,12 +201,15 @@ export async function createPaymentSession(
     timestamp,
   );
 
+  const customerName = sanitizeCustomerName(input.customerName);
+  const baseUrl = getSabpaisaBaseUrl();
+
   const payload = {
     merchantId: process.env.SABPAISA_MERCHANT_ID,
     merchantTxnId: input.merchantTxnId,
     amount: input.amountPaise,
     currency: "INR",
-    customerName: input.customerName,
+    customerName,
     customerEmail: input.customerEmail.trim(),
     customerPhone: input.customerPhone,
     returnUrl: `${getAppBaseUrl()}/payment/return`,
@@ -172,7 +218,7 @@ export async function createPaymentSession(
     timestamp,
     metadata: input.metadata,
     shippingAddress: {
-      name: input.shippingAddress.fullName,
+      name: customerName,
       line1: input.shippingAddress.line1,
       line2: input.shippingAddress.line2 || undefined,
       city: input.shippingAddress.city,
@@ -190,7 +236,7 @@ export async function createPaymentSession(
     },
   };
 
-  const response = await fetch(`${getSabpaisaBaseUrl()}/api/v2/payments`, {
+  const response = await fetch(`${baseUrl}/api/v2/payments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -199,16 +245,32 @@ export async function createPaymentSession(
     body: JSON.stringify(payload),
   });
 
-  const data = (await response.json()) as {
-    success?: boolean;
+  const rawText = await response.text();
+  let data: SabpaisaApiErrorBody & {
     paymentId?: string;
     checkoutUrl?: string;
     clientSecret?: string;
-    message?: string;
   };
 
+  try {
+    data = JSON.parse(rawText) as typeof data;
+  } catch {
+    console.error("[SabPaisa] Non-JSON response:", response.status, rawText.slice(0, 500));
+    throw new Error(`SabPaisa API returned invalid JSON (HTTP ${response.status})`);
+  }
+
   if (!response.ok || !data.checkoutUrl || !data.clientSecret || !data.paymentId) {
-    throw new Error(data.message || "Failed to create SabPaisa payment session");
+    const message = parseSabpaisaApiError(data, response.status);
+    console.error("[SabPaisa] create payment failed:", {
+      status: response.status,
+      baseUrl,
+      merchantTxnId: input.merchantTxnId,
+      amountPaise: input.amountPaise,
+      traceId: data.traceId,
+      message,
+      body: rawText.slice(0, 1000),
+    });
+    throw new Error(message);
   }
 
   const redirectUrl = `${data.checkoutUrl}?clientSecret=${encodeURIComponent(data.clientSecret)}`;

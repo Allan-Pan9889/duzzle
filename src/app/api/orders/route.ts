@@ -11,6 +11,25 @@ import {
 } from "@/lib/sabpaisa";
 import { calcShipping, getShippingSettings } from "@/lib/shipping";
 
+async function rollbackPendingSabpaisaOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order || order.paymentStatus === "PAID") return;
+
+  await prisma.$transaction(async (tx) => {
+    for (const item of order.items) {
+      await tx.productVariant.update({
+        where: { id: item.variantId },
+        data: { stock: { increment: item.quantity } },
+      });
+    }
+    await tx.orderItem.deleteMany({ where: { orderId } });
+    await tx.order.delete({ where: { id: orderId } });
+  });
+}
+
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -34,6 +53,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  let pendingSabpaisaOrderId: string | null = null;
+
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -156,6 +177,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ order });
     }
 
+    pendingSabpaisaOrderId = order.id;
+
     const session = await createPaymentSession({
       merchantTxnId: order.orderNumber,
       subtotalPaise: subtotal * 100,
@@ -181,7 +204,17 @@ export async function POST(request: NextRequest) {
       redirectUrl: session.redirectUrl,
     });
   } catch (error) {
+    if (pendingSabpaisaOrderId) {
+      try {
+        await rollbackPendingSabpaisaOrder(pendingSabpaisaOrderId);
+      } catch (rollbackError) {
+        console.error("SabPaisa order rollback error:", rollbackError);
+      }
+    }
+
     console.error("Orders POST error:", error);
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Failed to create order";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
