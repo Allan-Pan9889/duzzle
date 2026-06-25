@@ -15,6 +15,7 @@
     "seed:nykaa": "tsx scripts/seed-nykaa-fashion.ts",
     "seed:nykaa:resume-men": "SEED_RESUME=1 SEED_CATEGORY=MEN tsx scripts/seed-nykaa-fashion.ts",
     "seed:firstcry": "tsx scripts/seed-firstcry-kids.ts",
+    "migrate:sabpaisa": "tsx scripts/migrate-razorpay-to-sabpaisa.ts",
     "update:demo-images": "tsx scripts/update-demo-images.ts",
     "update:home-images": "tsx scripts/update-home-images.ts",
     "clear:image-cache": "tsx scripts/clear-image-cache.ts",

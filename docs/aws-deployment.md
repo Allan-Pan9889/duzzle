@@ -503,7 +503,8 @@ git pull origin main
 npm ci
 
 # 1) 数据库：枚举 RAZORPAY→SABPAISA，重命名支付字段，创建 WebhookEvent 表
-psql "$DATABASE_URL" -f scripts/migrate-razorpay-to-sabpaisa.sql
+npm run migrate:sabpaisa
+# 或：psql "$DATABASE_URL" -f scripts/migrate-razorpay-to-sabpaisa.sql
 
 # 若 migrate 脚本已执行过，仅需同步 Prisma：
 # npx prisma db push --accept-data-loss
@@ -594,6 +595,24 @@ sudo -u postgres psql -c "SELECT 1;"
 ```
 
 检查 `.env` 中 `DATABASE_URL` 是否指向 `127.0.0.1`。
+
+### 创建订单报错 `invalid input value for enum "PaymentMethod": "SABPAISA"`
+
+代码已切到 SabPaisa，但 **PostgreSQL 枚举仍是旧值 `RAZORPAY`**。在 EC2 上执行一次迁移：
+
+```bash
+cd /var/www/duzzle
+git pull origin main   # 含 migrate:sabpaisa 脚本后
+npm run migrate:sabpaisa
+npx prisma generate
+pm2 restart duzzle
+```
+
+或直接用 SQL（仅需执行一次）：
+
+```bash
+psql "$DATABASE_URL" -c 'ALTER TYPE "PaymentMethod" RENAME VALUE '\''RAZORPAY'\'' TO '\''SABPAISA'\'';'
+```
 
 ### SabPaisa Webhook 未收到或订单未变 PAID
 
