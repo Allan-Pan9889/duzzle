@@ -329,7 +329,7 @@ sudo certbot renew --dry-run
 将以下 URL 提供给 SabPaisa 集成团队（须 **HTTPS 公网可达**）：
 
 ```
-https://shop.duzzlese.com/api/webhooks/sabpaisa
+https://shop.duzzlese.com/notify/sabpaisa/notify_res.htm
 ```
 
 Webhook 事件：`payment.success` / `payment.failed` / `payment.expired` / `payment.timeout`。  
@@ -349,11 +349,11 @@ Webhook 事件：`payment.success` / `payment.failed` / `payment.expired` / `pay
 | 路径 | 作用 |
 |------|------|
 | `/payment/return` | 用户支付完成回跳（SabPaisa 追加 query 参数） |
-| `/api/webhooks/sabpaisa` | 服务端 Webhook 接收 |
+| `/notify/sabpaisa/notify_res.htm` | 服务端 Webhook 接收 |
 
 ### 11.4 Nginx 注意事项
 
-Webhook 与 Return URL 均为 POST/GET 到 Next.js，**不要**对 `/api/webhooks/sabpaisa` 做额外 rewrite 或缓存。  
+Webhook 与 Return URL 均为 POST/GET 到 Next.js，**不要**对 `/notify/sabpaisa/notify_res.htm` 做额外 rewrite 或缓存。  
 确保 `proxy_set_header Host` 与 `X-Forwarded-Proto` 已配置（见 §9）。
 
 ### 11.5 配置完成后
@@ -407,7 +407,7 @@ gunzip -c /var/backups/duzzle/duzzle-2026-06-08.sql.gz | psql "postgresql://duzz
 | OTP 登录 | 10 位印度手机号 |
 | 购物车 / COD | 完整下单流程 |
 | 在线支付 SabPaisa | Checkout 选 Pay Online，跳转收银台并回跳成功 |
-| Webhook | SabPaisa 后台已登记 `/api/webhooks/sabpaisa` |
+| Webhook | SabPaisa 后台已登记 `/notify/sabpaisa/notify_res.htm` |
 | 管理后台 | `/admin/login` |
 | 管理员密码 | 已改为强密码 |
 | HTTPS | 证书有效 |
@@ -597,7 +597,7 @@ sudo -u postgres psql -c "SELECT 1;"
 
 ### SabPaisa Webhook 未收到或订单未变 PAID
 
-1. 确认 SabPaisa 已登记 `https://shop.duzzlese.com/api/webhooks/sabpaisa`
+1. 确认 SabPaisa 已登记 `https://shop.duzzlese.com/notify/sabpaisa/notify_res.htm`
 2. 检查 `.env` 中 `SABPAISA_WEBHOOK_SECRET` 与 SabPaisa 提供一致
 3. 查看应用日志：`pm2 logs duzzle --lines 100`
 4. Return URL 成功但订单仍 Pending：Webhook 可能延迟，用户刷新订单页；或手动调 SabPaisa Enquiry API 核对
