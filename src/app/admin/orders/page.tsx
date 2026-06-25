@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
+import { getPaymentMethodLabel } from "@/lib/payment-labels";
 import { formatPrice } from "@/lib/utils";
 
 type Order = {
@@ -83,7 +84,7 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3 text-muted">{o.user.phone}</td>
                 <td className="px-4 py-3">{formatPrice(o.total)}</td>
                 <td className="px-4 py-3 text-muted">
-                  {o.paymentMethod === "COD" ? "COD" : "Razorpay"}
+                  {getPaymentMethodLabel(o.paymentMethod)}
                 </td>
                 <td className="px-4 py-3">
                   <OrderStatusBadge status={o.status} />

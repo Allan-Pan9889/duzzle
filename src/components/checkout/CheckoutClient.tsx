@@ -20,12 +20,6 @@ type CartItem = {
   };
 };
 
-declare global {
-  interface Window {
-    Razorpay: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
 const FREE_SHIPPING_THRESHOLD = 999;
 const BASE_SHIPPING_FEE = 79;
 
@@ -37,16 +31,18 @@ export function CheckoutClient() {
   const [subtotal, setSubtotal] = useState(0);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodOption>("COD");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
-  const [razorpayAvailable, setRazorpayAvailable] = useState(false);
+  const [sabpaisaAvailable, setSabpaisaAvailable] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const [addrRes, cartRes] = await Promise.all([
+    const [addrRes, cartRes, paymentRes] = await Promise.all([
       fetch("/api/addresses"),
       fetch("/api/cart"),
+      fetch("/api/payments/config"),
     ]);
 
     if (addrRes.ok) {
@@ -67,11 +63,15 @@ export function CheckoutClient() {
       setCartItems(cartData.items ?? []);
       setSubtotal(cartData.subtotal ?? 0);
     }
+
+    if (paymentRes.ok) {
+      const paymentData = await paymentRes.json();
+      setSabpaisaAvailable(Boolean(paymentData.sabpaisaAvailable));
+    }
   }, []);
 
   useEffect(() => {
     fetchData().finally(() => setLoading(false));
-    setRazorpayAvailable(Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID));
   }, [fetchData]);
 
   const shippingFee = calcShipping(subtotal, FREE_SHIPPING_THRESHOLD, BASE_SHIPPING_FEE);
@@ -90,23 +90,14 @@ export function CheckoutClient() {
     if (result.address?.id) setSelectedAddressId(result.address.id);
   }
 
-  function loadRazorpayScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (window.Razorpay) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Razorpay"));
-      document.body.appendChild(script);
-    });
-  }
-
   async function handlePlaceOrder() {
     if (!selectedAddressId) {
       setError("Please select a delivery address");
+      return;
+    }
+
+    if (paymentMethod === "SABPAISA" && !customerEmail.trim()) {
+      setError("Email is required for online payment");
       return;
     }
 
@@ -117,61 +108,29 @@ export function CheckoutClient() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addressId: selectedAddressId, paymentMethod }),
+        body: JSON.stringify({
+          addressId: selectedAddressId,
+          paymentMethod,
+          customerEmail: paymentMethod === "SABPAISA" ? customerEmail.trim() : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to place order");
 
-      const { order, razorpayKeyId } = data;
+      const { order, redirectUrl } = data;
 
       if (paymentMethod === "COD") {
         router.push(`/account/orders/${order.id}?placed=1`);
         return;
       }
 
-      await loadRazorpayScript();
+      if (!redirectUrl) {
+        throw new Error("Missing payment redirect URL");
+      }
 
-      const rzp = new window.Razorpay({
-        key: razorpayKeyId,
-        amount: order.total * 100,
-        currency: "INR",
-        name: "Duzzlecode",
-        description: `Order ${order.orderNumber}`,
-        order_id: order.razorpayOrderId,
-        prefill: {
-          contact: user?.phone.replace("+91", "") ?? "",
-        },
-        handler: async (response: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string;
-          razorpay_signature: string;
-        }) => {
-          const verifyRes = await fetch("/api/payments/razorpay/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: order.id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
-          const verifyData = await verifyRes.json();
-          if (!verifyRes.ok) {
-            setError(verifyData.error || "Payment verification failed");
-            return;
-          }
-          router.push(`/account/orders/${order.id}?placed=1`);
-        },
-        modal: {
-          ondismiss: () => setPlacing(false),
-        },
-      });
-
-      rzp.open();
+      window.location.href = redirectUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place order");
-    } finally {
       setPlacing(false);
     }
   }
@@ -259,8 +218,25 @@ export function CheckoutClient() {
             <PaymentSelector
               value={paymentMethod}
               onChange={setPaymentMethod}
-              razorpayAvailable={razorpayAvailable}
+              sabpaisaAvailable={sabpaisaAvailable}
             />
+
+            {paymentMethod === "SABPAISA" && (
+              <div className="mt-4 border border-gray-100 p-4">
+                <label className="block text-sm font-medium text-primary" htmlFor="checkout-email">
+                  Email for payment receipt
+                </label>
+                <input
+                  id="checkout-email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="mt-2 w-full border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
+                  autoComplete="email"
+                />
+              </div>
+            )}
           </section>
         </div>
 

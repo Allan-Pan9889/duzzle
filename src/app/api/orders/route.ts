@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
-import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay";
+import {
+  createPaymentSession,
+  formatIndianPhone,
+  isSabpaisaConfigured,
+  isValidCheckoutEmail,
+} from "@/lib/sabpaisa";
 import { calcShipping, getShippingSettings } from "@/lib/shipping";
 
 export async function GET() {
@@ -38,20 +43,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const addressId = typeof body.addressId === "string" ? body.addressId : "";
     const paymentMethod = body.paymentMethod as PaymentMethod;
+    const customerEmail =
+      typeof body.customerEmail === "string" ? body.customerEmail.trim() : "";
 
     if (!addressId) {
       return NextResponse.json({ error: "Address is required" }, { status: 400 });
     }
 
-    if (!["RAZORPAY", "COD"].includes(paymentMethod)) {
+    if (!["SABPAISA", "COD"].includes(paymentMethod)) {
       return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
     }
 
-    if (paymentMethod === "RAZORPAY" && !isRazorpayConfigured()) {
+    if (paymentMethod === "SABPAISA" && !isSabpaisaConfigured()) {
       return NextResponse.json(
         { error: "Online payment is not configured. Please use Cash on Delivery." },
         { status: 400 },
       );
+    }
+
+    if (paymentMethod === "SABPAISA" && !isValidCheckoutEmail(customerEmail)) {
+      return NextResponse.json({ error: "Valid email is required for online payment" }, { status: 400 });
     }
 
     const address = await prisma.address.findFirst({
@@ -101,6 +112,7 @@ export async function POST(request: NextRequest) {
       city: address.city,
       state: address.state,
       pinCode: address.pinCode,
+      ...(paymentMethod === "SABPAISA" ? { email: customerEmail } : {}),
     };
 
     const order = await prisma.$transaction(async (tx) => {
@@ -140,26 +152,33 @@ export async function POST(request: NextRequest) {
       return created;
     });
 
-    let razorpayOrderId: string | null = null;
-
-    if (paymentMethod === "RAZORPAY") {
-      const razorpay = getRazorpayClient();
-      const razorpayOrder = await razorpay.orders.create({
-        amount: total * 100,
-        currency: "INR",
-        receipt: orderNumber,
-      });
-      razorpayOrderId = razorpayOrder.id;
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { razorpayOrderId },
-      });
+    if (paymentMethod === "COD") {
+      return NextResponse.json({ order });
     }
 
+    const session = await createPaymentSession({
+      merchantTxnId: order.orderNumber,
+      subtotalPaise: subtotal * 100,
+      shippingPaise: shippingFee * 100,
+      amountPaise: total * 100,
+      customerName: address.fullName,
+      customerEmail,
+      customerPhone: formatIndianPhone(address.phone),
+      description: `Order ${order.orderNumber}`,
+      shippingAddress: addressSnapshot,
+      metadata: {
+        orderId: order.id,
+      },
+    });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { sabpaisaPaymentId: session.paymentId },
+    });
+
     return NextResponse.json({
-      order: { ...order, razorpayOrderId },
-      razorpayKeyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      order: { ...order, sabpaisaPaymentId: session.paymentId },
+      redirectUrl: session.redirectUrl,
     });
   } catch (error) {
     console.error("Orders POST error:", error);

@@ -23,7 +23,7 @@ enum OrderStatus {
 }
 
 enum PaymentMethod {
-  RAZORPAY
+  SABPAISA
   COD
 }
 
@@ -128,8 +128,8 @@ model Order {
   shippingFee       Int
   total             Int
   addressSnapshot   Json
-  razorpayOrderId   String?
-  razorpayPaymentId String?
+  sabpaisaPaymentId String?
+  sabpaisaTxnId     String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   items             OrderItem[]
@@ -167,4 +167,14 @@ model Admin {
   id           String @id @default(cuid())
   email        String @unique
   passwordHash String
+}
+
+model WebhookEvent {
+  id             String   @id @default(cuid())
+  idempotencyKey String   @unique
+  event          String
+  merchantTxnId  String
+  processedAt    DateTime @default(now())
+
+  @@index([merchantTxnId])
 }

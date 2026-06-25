@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
+import { getPaymentMethodLabel } from "@/lib/payment-labels";
 import { formatPrice } from "@/lib/utils";
 
 type OrderItem = {
@@ -43,6 +44,7 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const justPlaced = searchParams.get("placed") === "1";
+  const paymentResult = searchParams.get("payment");
   const { user, loading, openLogin } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -97,6 +99,13 @@ export default function OrderDetailPage() {
       {justPlaced && (
         <div className="mt-4 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           Order placed successfully! Thank you for shopping with Duzzlecode.
+        </div>
+      )}
+
+      {paymentResult && paymentResult !== "success" && (
+        <div className="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Payment {paymentResult}. You can retry checkout or choose Cash on Delivery for a new
+          order.
         </div>
       )}
 
@@ -183,7 +192,7 @@ export default function OrderDetailPage() {
             <p>
               Method:{" "}
               <span className="text-primary">
-                {order.paymentMethod === "COD" ? "Cash on Delivery" : "Razorpay"}
+                {getPaymentMethodLabel(order.paymentMethod)}
               </span>
             </p>
             <p>

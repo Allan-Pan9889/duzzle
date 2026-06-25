@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
+import { getPaymentMethodLabel } from "@/lib/payment-labels";
 import { ORDER_STATUS_LABELS } from "@/lib/orders";
 import { formatPrice } from "@/lib/utils";
 
@@ -148,7 +149,7 @@ export default function AdminOrderDetailPage() {
             <p>{order.addressSnapshot.phone}</p>
           </div>
           <p className="mt-4 text-sm text-muted">
-            Payment: {order.paymentMethod === "COD" ? "Cash on Delivery" : "Razorpay"}
+            Payment: {getPaymentMethodLabel(order.paymentMethod)}
           </p>
         </section>
       </div>

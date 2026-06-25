@@ -1,6 +1,6 @@
-# Duzzle AWS 部署指南（Amazon Linux 2023 · 单机 PostgreSQL）
+# Duzzlecode AWS 部署指南（Amazon Linux 2023 · 单机 PostgreSQL）
 
-将 Duzzle（Next.js 16 + Prisma + PostgreSQL）部署到 **单台 EC2**：应用、Nginx、数据库全部在同一实例上运行，**不使用 RDS**。
+将 Duzzlecode（Next.js 16 + Prisma + PostgreSQL）部署到 **单台 EC2**：应用、Nginx、数据库全部在同一实例上运行，**不使用 RDS**。
 
 适合印度市场，推荐区域 **ap-south-1（孟买）**。
 
@@ -21,7 +21,7 @@
 | AMI | **Amazon Linux 2023** | 默认用户 `ec2-user` |
 | PostgreSQL | 16（本机安装） | 只监听 localhost，**安全组不开放 5432** |
 | 存储 | 40GB gp3 | 系统 + 代码 + 数据库数据 |
-| 域名 | 可选 | HTTPS 与 Razorpay 回调 |
+| 域名 | 可选 | HTTPS 与 SabPaisa 支付回跳 / Webhook |
 
 预估月费（按需）：约 **$15–25 USD**（无 RDS，成本更低）。
 
@@ -32,9 +32,9 @@
 ## 2. 前置准备
 
 - AWS 账号（建议开启 MFA）
-- 域名（可选，例如 `shop.yourdomain.com`）
+- 域名（可选，生产示例：`shop.duzzlese.com`）
 - GitHub 仓库：`https://github.com/Allan-Pan9889/duzzle`
-- Razorpay **Live** 密钥（正式上线支付时）
+- SabPaisa **Production** 密钥（正式上线在线支付时，向 SabPaisa 集成团队申请）
 - 本地已验证：`npm run build` 可通过
 
 ---
@@ -159,15 +159,17 @@ DATABASE_URL="postgresql://duzzle:YOUR_STRONG_DB_PASSWORD@127.0.0.1:5432/duzzle"
 
 JWT_SECRET="用下方命令生成"
 
-RAZORPAY_KEY_ID="rzp_live_xxxx"
-RAZORPAY_KEY_SECRET="xxxx"
-RAZORPAY_WEBHOOK_SECRET="xxxx"
-NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_live_xxxx"
+# SabPaisa PG 3.0（生产）
+SABPAISA_API_KEY="sp_xxxx"
+SABPAISA_SECRET_KEY="sec_xxxx"
+SABPAISA_MERCHANT_ID="你的商户 Client Code"
+SABPAISA_WEBHOOK_SECRET="sec_xxxx"
+SABPAISA_BASE_URL="https://merchant-api.sabpaisa.in"
 
 ADMIN_EMAIL="admin@duzzle.com"
 ADMIN_PASSWORD="生产环境强密码"
 
-NEXT_PUBLIC_APP_URL="https://shop.yourdomain.com"
+NEXT_PUBLIC_APP_URL="https://shop.duzzlese.com"
 
 # Minibe OTP 短信（生产必填，测试可暂不填并改用 OTP_DEV_CODE）
 OTP_API_KEY="your-api-key"
@@ -305,14 +307,62 @@ sudo certbot renew --dry-run
 
 ---
 
-## 11. Razorpay 生产配置
+## 11. SabPaisa 生产配置
 
-1. [Razorpay Dashboard](https://dashboard.razorpay.com) → **Live Mode**
-2. 将 Live Key 写入 `.env`
-3. `NEXT_PUBLIC_RAZORPAY_KEY_ID` 与 Key ID 保持一致
-4. Webhook（若启用）：  
-   `https://shop.yourdomain.com/api/payments/razorpay/verify`
-5. `pm2 restart duzzle`
+在线支付已切换为 [SabPaisa PG 3.0](https://devdocs.sabpaisa.in/api-reference)（Redirect 收银台 + Webhook）。**不再使用 Razorpay。**
+
+### 11.1 环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `SABPAISA_API_KEY` | API 请求头 `X-Api-Key` |
+| `SABPAISA_SECRET_KEY` | 创建支付 checksum、Return URL 验签 |
+| `SABPAISA_MERCHANT_ID` | 商户 Client Code（如 `SQUA102`） |
+| `SABPAISA_WEBHOOK_SECRET` | Webhook HMAC 验签（可与 Secret Key 相同，以 SabPaisa 提供为准） |
+| `SABPAISA_BASE_URL` | 生产：`https://merchant-api.sabpaisa.in`；沙箱：`https://staging-sb-merchant-api.sabpaisa.in` |
+| `NEXT_PUBLIC_APP_URL` | 站点根 URL，用于 `returnUrl`（如 `https://shop.duzzlese.com`） |
+
+> Secret Key **仅服务端**使用，切勿暴露到前端或 Git。
+
+### 11.2 向 SabPaisa 登记 Webhook
+
+将以下 URL 提供给 SabPaisa 集成团队（须 **HTTPS 公网可达**）：
+
+```
+https://shop.duzzlese.com/api/webhooks/sabpaisa
+```
+
+Webhook 事件：`payment.success` / `payment.failed` / `payment.expired` / `payment.timeout`。  
+应用会验签 `X-SabPaisa-Signature` 并按 `idempotency_key` 幂等更新订单。
+
+### 11.3 支付流程（生产）
+
+```
+用户 Checkout 选 Pay Online → 填写 Email → 创建 Order
+→ POST SabPaisa /api/v2/payments → 跳转 checkoutUrl
+→ 用户支付 → 回跳 /payment/return（验签 + Enquiry）
+→ Webhook 异步确认 → 订单 status=PAID
+```
+
+相关路由：
+
+| 路径 | 作用 |
+|------|------|
+| `/payment/return` | 用户支付完成回跳（SabPaisa 追加 query 参数） |
+| `/api/webhooks/sabpaisa` | 服务端 Webhook 接收 |
+
+### 11.4 Nginx 注意事项
+
+Webhook 与 Return URL 均为 POST/GET 到 Next.js，**不要**对 `/api/webhooks/sabpaisa` 做额外 rewrite 或缓存。  
+确保 `proxy_set_header Host` 与 `X-Forwarded-Proto` 已配置（见 §9）。
+
+### 11.5 配置完成后
+
+```bash
+cd /var/www/duzzle && pm2 restart duzzle
+```
+
+浏览器测试：Checkout → Pay Online → 应跳转 SabPaisa 收银台；支付成功后回到订单详情页。
 
 生产环境配置 Minibe OTP（见 `.env` 中 `OTP_API_*`）；测试阶段可用 `OTP_DEV_CODE=123456` 跳过短信。
 
@@ -356,6 +406,8 @@ gunzip -c /var/backups/duzzle/duzzle-2026-06-08.sql.gz | psql "postgresql://duzz
 | 首页 / 男女装 | 图片为服装实拍 |
 | OTP 登录 | 10 位印度手机号 |
 | 购物车 / COD | 完整下单流程 |
+| 在线支付 SabPaisa | Checkout 选 Pay Online，跳转收银台并回跳成功 |
+| Webhook | SabPaisa 后台已登记 `/api/webhooks/sabpaisa` |
 | 管理后台 | `/admin/login` |
 | 管理员密码 | 已改为强密码 |
 | HTTPS | 证书有效 |
@@ -441,7 +493,48 @@ npm run build
 pm2 restart duzzle
 ```
 
-### 14.4 更新后验证
+### 14.4 从 Razorpay 迁移到 SabPaisa（2026-06 支付切换）
+
+若 EC2 上已有旧版 Razorpay 订单数据，**先备份**再执行：
+
+```bash
+cd /var/www/duzzle
+git pull origin main
+npm ci
+
+# 1) 数据库：枚举 RAZORPAY→SABPAISA，重命名支付字段，创建 WebhookEvent 表
+psql "$DATABASE_URL" -f scripts/migrate-razorpay-to-sabpaisa.sql
+
+# 若 migrate 脚本已执行过，仅需同步 Prisma：
+# npx prisma db push --accept-data-loss
+npx prisma generate
+
+# 2) 更新 .env：删除 RAZORPAY_* / NEXT_PUBLIC_RAZORPAY_KEY_ID，写入 SABPAISA_*（见 §6.1、§11.1）
+
+# 3) 构建并重启
+npm run build
+pm2 restart duzzle
+```
+
+**全新部署**（无历史 Razorpay 数据）可跳过 SQL 脚本，直接：
+
+```bash
+npx prisma db push
+npx prisma generate
+npm run build
+pm2 restart duzzle
+```
+
+迁移后验证：
+
+```bash
+curl -s "https://shop.duzzlese.com/api/payments/config"
+# 应返回 {"sabpaisaAvailable":true}（密钥配置正确时）
+```
+
+---
+
+### 14.5 更新后验证
 
 ```bash
 curl -s "http://127.0.0.1:3000/api/products?category=WOMEN&limit=1" | head -c 200
@@ -501,6 +594,14 @@ sudo -u postgres psql -c "SELECT 1;"
 ```
 
 检查 `.env` 中 `DATABASE_URL` 是否指向 `127.0.0.1`。
+
+### SabPaisa Webhook 未收到或订单未变 PAID
+
+1. 确认 SabPaisa 已登记 `https://shop.duzzlese.com/api/webhooks/sabpaisa`
+2. 检查 `.env` 中 `SABPAISA_WEBHOOK_SECRET` 与 SabPaisa 提供一致
+3. 查看应用日志：`pm2 logs duzzle --lines 100`
+4. Return URL 成功但订单仍 Pending：Webhook 可能延迟，用户刷新订单页；或手动调 SabPaisa Enquiry API 核对
+5. 确保 Nginx 未拦截 POST body（Webhook 验签需 **原始 JSON 字节**）
 
 ### Nginx 502 Bad Gateway
 

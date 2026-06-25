@@ -1,31 +1,31 @@
-export type PaymentMethodOption = "RAZORPAY" | "COD";
+export type PaymentMethodOption = "SABPAISA" | "COD";
 
 export function PaymentSelector({
   value,
   onChange,
-  razorpayAvailable,
+  sabpaisaAvailable,
 }: {
   value: PaymentMethodOption;
   onChange: (method: PaymentMethodOption) => void;
-  razorpayAvailable: boolean;
+  sabpaisaAvailable: boolean;
 }) {
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-primary">Payment Method</p>
 
-      {razorpayAvailable && (
+      {sabpaisaAvailable && (
         <label className="flex cursor-pointer items-start gap-3 border border-gray-200 p-4 transition-colors hover:border-primary">
           <input
             type="radio"
             name="payment"
-            value="RAZORPAY"
-            checked={value === "RAZORPAY"}
-            onChange={() => onChange("RAZORPAY")}
+            value="SABPAISA"
+            checked={value === "SABPAISA"}
+            onChange={() => onChange("SABPAISA")}
             className="mt-1"
           />
           <div>
             <p className="text-sm font-medium text-primary">Pay Online</p>
-            <p className="text-xs text-muted">UPI, Cards, Net Banking via Razorpay</p>
+            <p className="text-xs text-muted">UPI, Cards, Net Banking via SabPaisa</p>
           </div>
         </label>
       )}
