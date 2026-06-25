@@ -37,7 +37,7 @@ async function main() {
         phone: "9876543210",
         line1: "123 Test Street",
         city: "Chennai",
-        state: "TN",
+        state: "Tamil Nadu",
         pinCode: "600032",
       },
     });

@@ -624,6 +624,7 @@ NEXT_PUBLIC_APP_URL="https://shop.duzzlese.com"
 | `INVALID_SIGNATURE` | 检查 `SABPAISA_SECRET_KEY` 是否与商户号匹配 |
 | `UNAUTHORIZED` | 检查 `SABPAISA_API_KEY` |
 | `INVALID_CUSTOMER_NAME` | 收货人姓名仅允许英文字母和空格（已自动清洗） |
+| `shippingAddress.state` / `Invalid Indian state code` | 州须为两字母代码（如 TN）；已自动从「Tamil Nadu」转换 |
 | `INVALID_PHONE` | 地址手机号须为 10 位印度号码（6–9 开头） |
 | `DUPLICATE_TRANSACTION` | 同一订单号重复发起，重新下单即可 |
 

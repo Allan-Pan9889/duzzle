@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { toIndianStateCode } from "@/lib/indian-states";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_BASE_URL = "https://staging-sb-merchant-api.sabpaisa.in";
@@ -222,7 +223,7 @@ export async function createPaymentSession(
       line1: input.shippingAddress.line1,
       line2: input.shippingAddress.line2 || undefined,
       city: input.shippingAddress.city,
-      state: input.shippingAddress.state,
+      state: toIndianStateCode(input.shippingAddress.state),
       postalCode: input.shippingAddress.pinCode,
       country: "IN",
       phone: formatIndianPhone(input.shippingAddress.phone),
