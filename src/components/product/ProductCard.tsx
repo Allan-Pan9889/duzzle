@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { calcDiscount, formatPrice, isLocalDemoAsset } from "@/lib/utils";
+import { BRAND_IMAGE } from "@/lib/company";
 import { WishlistButton } from "./WishlistButton";
 
 export type ProductCardData = {
@@ -13,7 +14,7 @@ export type ProductCardData = {
 };
 
 export function ProductCard({ product }: { product: ProductCardData }) {
-  const image = product.images[0] || "/duzzlecode.png";
+  const image = product.images[0] || BRAND_IMAGE;
   const discount = calcDiscount(product.price, product.compareAtPrice);
 
   return (

@@ -1,15 +1,15 @@
 import { ContentPage, ContentSection } from "@/components/layout/ContentPage";
-import { COMPANY_LEGAL_NAME } from "@/lib/company";
+import { COMPANY_BRAND, COMPANY_EMAIL, COMPANY_LEGAL_NAME } from "@/lib/company";
 
 export const metadata = {
-  title: "Privacy Policy | Duzzlecode",
+  title: `Privacy Policy | ${COMPANY_BRAND}`,
 };
 
 export default function PrivacyPolicyPage() {
   return (
     <ContentPage title="Privacy Policy">
       <p>
-        At Duzzlecode, we value your privacy and are committed to protecting your personal
+        At {COMPANY_BRAND}, we value your privacy and are committed to protecting your personal
         information.
       </p>
 
@@ -52,8 +52,8 @@ export default function PrivacyPolicyPage() {
       <ContentSection title="Contact">
         <p>
           Email:{" "}
-          <a href="mailto:duzzlecode2026@gmail.com" className="text-primary underline">
-            duzzlecode2026@gmail.com
+          <a href={`mailto:${COMPANY_EMAIL}`} className="text-primary underline">
+            {COMPANY_EMAIL}
           </a>
         </p>
       </ContentSection>

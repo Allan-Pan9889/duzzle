@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { useState } from "react";
 import { isLocalDemoAsset } from "@/lib/utils";
+import { BRAND_IMAGE } from "@/lib/company";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
-  const gallery = images.length > 0 ? images : ["/duzzlecode.png"];
+  const gallery = images.length > 0 ? images : [BRAND_IMAGE];
 
   return (
     <div className="space-y-4">

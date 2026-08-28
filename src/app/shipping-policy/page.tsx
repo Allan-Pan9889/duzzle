@@ -1,3 +1,5 @@
+import { COMPANY_BRAND } from "@/lib/company";
+
 export default function ShippingPolicyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -6,7 +8,7 @@ export default function ShippingPolicyPage() {
         <section>
           <h2 className="mb-2 font-medium text-primary">Delivery Coverage</h2>
           <p>
-            Duzzlecode delivers across India. Please provide a valid 6-digit Pin Code at checkout
+            {COMPANY_BRAND} delivers across India. Please provide a valid 6-digit Pin Code at checkout
             so we can confirm delivery to your area.
           </p>
         </section>

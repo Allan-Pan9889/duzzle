@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { COMPANY_ADDRESS, COMPANY_LEGAL_NAME } from "@/lib/company";
+import {
+  COMPANY_ADDRESS,
+  COMPANY_BRAND,
+  COMPANY_EMAIL,
+  COMPANY_LEGAL_NAME,
+  COMPANY_PHONE,
+  COMPANY_PHONE_TEL,
+} from "@/lib/company";
 
 const shopLinks = [
   { href: "/women", label: "Women" },
@@ -60,28 +67,28 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
                 <a
-                  href="mailto:duzzlecode2026@gmail.com"
+                  href={`mailto:${COMPANY_EMAIL}`}
                   className="transition-colors hover:text-white"
                 >
-                  duzzlecode2026@gmail.com
+                  {COMPANY_EMAIL}
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+918680014906"
+                  href={`tel:${COMPANY_PHONE_TEL}`}
                   className="transition-colors hover:text-white"
                 >
-                  +91 8680014906
+                  {COMPANY_PHONE}
                 </a>
               </li>
-              <li>{COMPANY_ADDRESS}</li>
+              <li className="whitespace-pre-line">{COMPANY_ADDRESS}</li>
               <li>{COMPANY_LEGAL_NAME}</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} Duzzlecode. All rights reserved.
+          © {new Date().getFullYear()} {COMPANY_BRAND}. All rights reserved.
         </div>
       </div>
     </footer>

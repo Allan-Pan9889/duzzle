@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, isLocalDemoAsset } from "@/lib/utils";
+import { BRAND_IMAGE } from "@/lib/company";
 
 export type CartItemData = {
   id: string;
@@ -31,7 +32,7 @@ export function CartItem({
   updating?: boolean;
 }) {
   const { product } = item.variant;
-  const image = product.images[0] || "/duzzlecode.png";
+  const image = product.images[0] || BRAND_IMAGE;
 
   return (
     <div className="flex gap-4 border-b border-gray-100 py-6">

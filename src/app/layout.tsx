@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ConditionalShell } from "@/components/layout/ConditionalShell";
+import { COMPANY_BRAND } from "@/lib/company";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,7 +16,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Duzzlecode — Fashion for Every Style",
+  title: `${COMPANY_BRAND} — Fashion for Every Style`,
   description:
     "Premium men's and women's fashion. Shop the latest trends at fair prices.",
 };

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { COMPANY_BRAND_MARK } from "@/lib/company";
 import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
 
@@ -37,7 +38,7 @@ export function Header() {
           href="/"
           className="absolute left-1/2 -translate-x-1/2 font-serif text-xl tracking-[0.25em] text-primary"
         >
-          DUZZLECODE
+          {COMPANY_BRAND_MARK}
         </Link>
 
         <div className="flex items-center gap-4">

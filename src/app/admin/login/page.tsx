@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
     <AdminShell requireAuth={false}>
       <div className="mx-auto max-w-md">
         <h1 className="font-serif text-2xl text-primary">Admin Login</h1>
-        <p className="mt-2 text-sm text-muted">Sign in to manage Duzzlecode</p>
+        <p className="mt-2 text-sm text-muted">Sign in to manage Velnnova</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>

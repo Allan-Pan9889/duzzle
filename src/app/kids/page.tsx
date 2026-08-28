@@ -1,8 +1,9 @@
 import { ProductListingPage } from "@/components/product/ProductListingPage";
 import { parseProductFilters, type ProductFilterSearchParams } from "@/lib/parse-product-filters";
+import { COMPANY_BRAND } from "@/lib/company";
 
 export const metadata = {
-  title: "Kids | Duzzlecode",
+  title: `Kids | ${COMPANY_BRAND}`,
 };
 
 export const dynamic = "force-dynamic";
